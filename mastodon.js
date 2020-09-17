@@ -47,8 +47,15 @@ function loading(mode){
 function loadPage(){
     elemid("favcounter").innerText=likes_json['totalItems'];
     var posts=[], datetimelist=[], datecount=[];
-    var timecount=new Array(24*60);
-        for(let i=0;i<timecount.length;i++) timecount[i]=0;
+    var timecount=new Array(24*60), timelabel=new Array(24*60);
+    for(let i=0;i<timecount.length;i++){
+        timecount[i]=0;
+        let k = null;
+        if(i%60<10) k='0'+i%60;
+        else k=i%60; 
+        timelabel[i]=(i-i%60)/60+":"+k;
+    }
+    timelabel.push('24:00');
     var boost_counter=0, private_counter=0, unlisted_counter=0, direct_counter=0, public_counter=0, reply_counter=0;
     for (const cont of outbox_json["orderedItems"]){
         let date=new Date(cont['published']);
@@ -129,13 +136,38 @@ function loadPage(){
         }
     });
 */
+    var ctx = document.getElementById("Chart");
+    var myChart = new Chart(ctx,{
+        type:'line',
+        data: {
+            labels: timelabel,
+            datasets: [{
+                label:'post',
+                borderColor: "#607d8b",
+                data:timecount,
+                lineTension:0,
+                pointRadius:0,
+                borderWidth:1,
+            }]
+        },
+        options:{
+            scales:{
+                xAxes:[{
+                    ticks: {
+                        maxTicksLimit:24,
+                        maxRotation:0,
+                    }
+                }]
+            },
+        }
+    });
     loading(0)
 }
 
 function ranksort(replyto){
     replyto.sort();
     replyto.reverse();
-    var namelist=[], counterlist=[], replyrank=['<ol>'];
+    var namelist=[], counterlist=[], replyrank=['<table>'];
     for (const name of replyto){
         if(namelist.indexOf(name)===-1){
             namelist.push(name);
@@ -147,16 +179,18 @@ function ranksort(replyto){
 
     for(let i=0;i<30;i++){
         let t=counterlist.indexOf(Math.max.apply(null,counterlist));
-        replyrank.push('<li>');
+        replyrank.push('<tr><th>');
+        replyrank.push(i+1);
+        replyrank.push('</th><th>');
         replyrank.push(namelist[t]);
-        replyrank.push(':');
+        replyrank.push('</th><th>');
         replyrank.push(counterlist[t]);
         replyrank.push('times');
-        replyrank.push('</li>');
+        replyrank.push('</th></tr>');
         counterlist[t]=0;
     }
 
-    replyrank.push('</ol>');
+    replyrank.push('</table>');
     return replyrank.join('');
 }
 function loadsearch(){
