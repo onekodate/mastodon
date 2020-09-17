@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset=utf-8>
+        <title>mastodon</title>
+        <link rel="stylesheet" href="mastodon.css">
+    </head>
+    <body>
+        <div class="progress invisible" id="progress">
+            <div class="indeterminate"></div>
+        </div>
+        <div class="row container" id="error-box" style="display: none;">
+            <div class="card-panel">
+                <button onclick='document.getElementById("error-box").style.display = "none"'>閉じる</button>
+                <span>Error: <span id="error-text"></span></span>
+            </div>
+        </div>
+        <div class="loading">
+            <p>
+                <b>outbox.json</b>
+                <input type=file id=outbox accept=".json">
+            </p>
+            <p>
+                <b>likes.json</b>
+                <input type=file id=likes accept=".json">
+            </p>
+            <p>
+                <button class="submit" onclick="loadfile()">Load</button>
+            </p>
+        </div>
+        <div class = "card-panel">
+            <p><canvas id = "Chart" width="100%" height="50px"></canvas></p>
+        </div>
+        <div class="summary">
+            <p>You have posted <b id="sumpostcounter"></b> times.</p>
+            <p><b id="publiccounter"></b> times in public</p>
+            <p><b id="unlistedcounter"></b> times in unlisted</p>
+            <p><b id="privatecounter"></b> times in private</p>
+            <p><b id="directcounter"></b> times in direct</p>
+            <p>You have boosted <b id="boostcounter"></b> toots.</p>
+            <p>You have replied <b id="replycounter"></b> times.</p>
+        </div>
+        <div class = "card-panel">
+            <p><canvas id = "Chart" width="100%" height="50px"></canvas></p>
+        </div>
+        <div class="ranking">
+            <p>You have mentioned <b id="mentioncounter"></b> times.</p>
+            <p>You have mentioned to...</p>
+            <b id="replyrank"></b>
+            <p>You have favourited <b id="favcounter"></b> times.</p>
+            <p>You have favourited toots of...</p>
+            <b id="favrank"></b>
+        </div>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="moment.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+        <script src="mastodon.js"></script>
+
+    </body>
+</html>
