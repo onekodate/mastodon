@@ -24,7 +24,6 @@ function loadfile(){
             error("We got an error in loading files"+e);
         }
     }else error("No files selected");
-
 }
                 
 function error(text){
@@ -42,11 +41,23 @@ function loading(mode){
     else progress.className="progress invisible";
 }
 
-
+function openclose(btn){
+    const btnId =  btn.getAttribute("href");  
+    const targetId = btnId.slice(1);
+    let now=elemid(targetId).className;
+    if(now==="invisible"){
+        elemid(targetId).className="";
+//        if(targetId==="readmore5") elemid(btnId).className="invisible";
+    }else{
+        elemid(targetId).className="invisible";
+//        if(targetId==="readmore5") elemid(btnId).className="";
+    }        
+    return false;
+}
 
 function loadPage(){
-    elemid("favcounter").innerText=likes_json['totalItems'];
-    var posts=[], datetimelist=[], datecount=[];
+    //変数割り当て
+    var posts=[], boosts=[], datetimelist=[], datecount={}, datelabel=[], datelist=[], timelist=[];
     var timecount=new Array(24*60), timelabel=new Array(24*60);
     for(let i=0;i<timecount.length;i++){
         timecount[i]=0;
@@ -57,21 +68,26 @@ function loadPage(){
     }
     timelabel.push('24:00');
     var boost_counter=0, private_counter=0, unlisted_counter=0, direct_counter=0, public_counter=0, reply_counter=0;
+    //outbox読み取り
     for (const cont of outbox_json["orderedItems"]){
         let date=new Date(cont['published']);
         date.setDate(date.getHours()+9);
         const time = date.getHours()*60+date.getMinutes();
+        timelist.push(date.getHours()+"Hours");
         date = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+        datelist.push(date);
+        date+="T00:00:00";
+        timecount[time]++;
         if(!datecount[date]) datecount[date]=0;
         datecount[date]++;
-        timecount[time]++;
         let datetime={};
         datetime.X=date;
         datetime.Y=time; 
         datetimelist.push(datetime);
+
         if(cont['type']==='Announce'){
             boost_counter++;
-            posts.push(cont['object']);
+            boosts.push(cont['object']);
         }else{
             posts.push(cont['object']['content'].replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,''));
             if(cont['object']['inReplyTo']) reply_counter++;
@@ -84,7 +100,7 @@ function loadPage(){
             else unlisted_counter++;
         }
     }
-    delete outbox_json;
+    //summary
     elemid("sumpostcounter").innerText=posts.length;    
     elemid("publiccounter").innerText=public_counter;
     elemid("unlistedcounter").innerText=unlisted_counter;
@@ -92,6 +108,19 @@ function loadPage(){
     elemid("directcounter").innerText=direct_counter;
     elemid("boostcounter").innerText=boost_counter;
     elemid("replycounter").innerText=reply_counter;
+    elemid("favcounter").innerText=likes_json['totalItems'];
+    var ctx=elemid("circle");
+    var myChart = new Chart(ctx,{
+        type:'doughnut',
+        data:{
+            datasets:[{
+                data:[public_counter, unlisted_counter, private_counter, direct_counter, boost_counter],
+                backgroundColor:["rgb(255,0,255)","rgb(0,255,0)","rgb(0,0,255)","rgb(255,0,0)","rgb(0,128,0)"]
+            }],
+            labels:["Public", "Unlisted", "Private", "Direct", "Boost"],
+        }
+    });
+    //ranking
     var replyto=[];
     for (let obj of posts){
         while(obj.indexOf('@')!==-1&&obj.indexOf(' ')!==-1){
@@ -99,44 +128,25 @@ function loadPage(){
             obj=obj.substr(obj.indexOf(' ')+1);
         }
     }
-    elemid("mentioncounter").innerText=replyto.length;
-    document.getElementById('replyrank').innerHTML = ranksort(replyto);
+    document.getElementById('replyrank').innerHTML = ranksort(replyto,30);
+    
+    var boostuser=[]
+    for(const boost of boosts){
+        if(boost.indexOf('users')!==-1&&boost.indexOf('statuses')!==-1){
+            boostuser.push(boost.substring(boost.indexOf('users')+6,boost.indexOf('statuses')-1));
+        }
+    }
+    elemid("boostrank").innerHTML=ranksort(boostuser,30);
+    
     var favuser=[];
     for(const like of likes_json['orderedItems']){
         if(like.indexOf('users')!==-1&&like.indexOf('statuses')!==-1){
             favuser.push(like.substring(like.indexOf('users')+6,like.indexOf('statuses')-1));
         }
     }
-    document.getElementById("favrank").innerHTML = ranksort(favuser); 
-/*
-    var ctx = document.getElementById("Chart");
-    var myChart = new Chart(ctx, { 
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: "Date Time Scatter",
-                borderColor: "#607d8b",
-                data: datetimelist
-            }]
-        },
-        options: {
-            title: {
-                display: true,
-                text: 'Date Time Scatter'
-            },
-            scales: {
-                xAxes: [{
-                    type: 'time',
-                    time:{
-                        parser:"YYYY-MM-DD"
-                    }
-                }]
-            },
-            tooltips:{mode:'label'}
-        }
-    });
-*/
-    var ctx = document.getElementById("Chart");
+    elemid("favrank").innerHTML = ranksort(favuser,30);
+    //figure
+    var ctx = elemid("timeplot");
     var myChart = new Chart(ctx,{
         type:'line',
         data: {
@@ -161,10 +171,55 @@ function loadPage(){
             },
         }
     });
+    
+    var dcs=[];
+    for(const key in datecount){
+        let dc = {};
+        dc.X=key;
+        dc.Y=datecount[key];
+        dcs.push(dc);
+    }
+    const dateinit = new Date(datelist[0]);
+    const datelast = new Date(datelist[datelist.length-1]);
+    const wholedays = Math.ceil((datelast-dateinit)/60/60/24/1000);
+    elemid("wholedays").innerText=wholedays;
+    elemid("daten").innerText=dcs.length;
+    elemid("uprate").innerText=Math.round(dcs.length/wholedays*1000)/10;
+    elemid("aver").innerText=Math.round(posts.length/dcs.length);
+    elemid("daterank").innerHTML = ranksort(datelist,5);
+    elemid("timerank").innerHTML = ranksort(timelist,5);
+    /*
+    var ctx = document.getElementById("dateplot");
+    var myChart = new Chart(ctx,{
+        type:'line',
+        data: {
+            datasets: [{
+                label:'post',
+                borderColor: "#607d8b",
+                data:dcs,
+                lineTension:0,
+                pointRadius:0,
+                borderWidth:1,
+            }]
+        },
+        options:{
+            scales:{
+                xAxes:[{
+                    type:'time',
+                    time:{
+                        unit:'day'
+                    }
+                }]
+            },
+        }
+    });    
+    */
+    elemid("load").className="invisible";
+    elemid("main").className="";
     loading(0)
 }
 
-function ranksort(replyto){
+function ranksort(replyto,n){
     replyto.sort();
     replyto.reverse();
     var namelist=[], counterlist=[], replyrank=['<table>'];
@@ -176,22 +231,39 @@ function ranksort(replyto){
             counterlist[namelist.indexOf(name)]++;
         }
     }
-
-    for(let i=0;i<30;i++){
+    for(let i=0;i<n;i++){
+/*
+        if(i===10){
+            replyrank.push('</table>'+
+            '<div class="" id="#readmore5">'+
+            '    <a href="#readmore5" onclick="openclose(this);">Open</a>'+
+            '</div>'+
+            '<div id="readmore5" class="invisible">'+
+            '<table>');
+        }
+*/
         let t=counterlist.indexOf(Math.max.apply(null,counterlist));
         replyrank.push('<tr><th>');
-        replyrank.push(i+1);
+        replyrank.push(i+1+".");
         replyrank.push('</th><th>');
         replyrank.push(namelist[t]);
         replyrank.push('</th><th>');
         replyrank.push(counterlist[t]);
         replyrank.push('times');
         replyrank.push('</th></tr>');
-        counterlist[t]=0;
+        counterlist[t]=0;           
     }
-
     replyrank.push('</table>');
+/*
+    if(replyrank.length>80){
+        replyrank.push('<p class="readlessbutton">'+
+            '<a href="#readmore5" onclick="openclose(this);">Close</a>'+
+        '</p>'+        
+        '</div>');
+    }
+*/
     return replyrank.join('');
 }
+
 function loadsearch(){
     }
