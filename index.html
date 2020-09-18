@@ -3,60 +3,136 @@
     <head>
         <meta charset=utf-8>
         <title>mastodon</title>
- <!--
         <link rel="stylesheet" href="mastodon.css">
--->
     </head>
+    
     <body>
         <div class="progress invisible" id="progress">
             <div class="indeterminate"></div>
-        </div>
+        </div>  
+              
         <div class="row container" id="error-box" style="display: none;">
             <div class="card-panel">
                 <button onclick='document.getElementById("error-box").style.display = "none"'>閉じる</button>
                 <span>Error: <span id="error-text"></span></span>
             </div>
+        </div> 
+               
+        <div id="load" class="">
+            <div class="loading">
+                <p>
+                    <b>outbox.json</b>
+                    <input type=file id=outbox accept=".json">
+                </p>   
+                             
+                <p>
+                    <b>likes.json</b>
+                    <input type=file id=likes accept=".json">
+                </p>
+                                
+                <p>
+                    <button class="submit" onclick="loadfile()">Load</button>
+                </p>
+            </div>
         </div>
-        <div class="loading">
-            <p>このhtmlとスクリプトはnzwsさんの<a href="https://github.com/nzws/Mastodon-Archive-Viewer">Mastodon-Archive-Viewer</a>を下敷きにしています</p>
-            <p>
-                <b>outbox.json</b>
-                <input type=file id=outbox accept=".json">
-            </p>
-            <p>
-                <b>likes.json</b>
-                <input type=file id=likes accept=".json">
-            </p>
-            <p>
-                <button class="submit" onclick="loadfile()">Load</button>
-            </p>
+                
+        <div id="main" class="invisible">
+            <p class="readmorebutton">
+                <a href="#readmore1" onclick="openclose(this);">Summary</a>
+            </p>             
+                        
+            <div id="readmore1" class="">
+                <div class="figure">
+                    <p><canvas id="circle" height="70px"></canvas></p>
+                </div>
+                <div class="summary">
+
+                    <div class="post">
+                        <p>You have posted <b id="sumpostcounter"></b> times.</p>
+                        <p><b class="six" id="publiccounter"></b> times in public</p>
+                        <p><b class="six" id="unlistedcounter"></b> times in unlisted</p>
+                        <p><b class="six" id="privatecounter"></b> times in private</p>
+                        <p><b class="six" id="directcounter"></b> times in direct</p>
+                    </div>
+                
+
+                
+                    <div class="others">
+                        <p>You have boosted <b id="boostcounter"></b> toots.</p>
+                        <p>You have replied <b id="replycounter"></b> times.</p>
+                        <p>You have favourited <b id="favcounter"></b> times.</p>
+                    </div>
+                </div>
+                <p class="readlessbutton">
+                    <a href="#readmore1" onclick="openclose(this);">Close</a>
+                </p>
+            </div>
+                       
+            <p class="readmorebutton">
+                <a href="#readmore2" onclick="openclose(this);">Figure</a>
+            </p> 
+                     
+            <div id="readmore2" class="invisible">            
+                <div class = "figure">
+                    <p>
+                        You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%) and <b id="aver"></b> times per day.
+                    </p>
+                    <p><canvas id = "dateplot" width="80%" height="70px"></canvas></p>
+                    <b id="daterank"></b>
+                    <p><canvas id = "timeplot" width="80%" height="50px"></canvas></p>
+                    <b id="timerank"></b>
+                    <p><canvas id = "datetimescatter" width="100%" height="50px"></canvas></p>
+                </div>
+                <p class="readlessbutton">
+                    <a href="#readmore2" onclick="openclose(this);">Close</a>
+                </p>
+            </div>  
+                      
+            <p class="readmorebutton">
+                <a href="#readmore3" onclick="openclose(this);">Ranking</a>
+            </p>  
+                      
+            <div id="readmore3" class="invisible">                   
+                <div class="ranking">
+                    <div class="mention">
+                        <p>You have mentioned to...</p>
+                        <b id="replyrank"></b>
+                    </div>
+                    
+                    <div class="boost">
+                        <p>You have boosted from...</p>
+                        <b id="boostrank"></b>
+                    </div>
+                    
+                    <div class="fav">
+                        <p>You have favourited toots of...</p>
+                        <b id="favrank"></b>
+                    </div>
+                </div>
+                <p class="readlessbutton">
+                    <a href="#readmore3" onclick="openclose(this);">Close</a>
+                </p>
+            </div>   
+            <p class="readmorebutton">
+                <a href="#readmore4" onclick="openclose(this);">Search</a>
+            </p>  
+                      
+            <div id="readmore4" class="invisible">                     
+                <div class="search">
+                    <p>
+                </div>
+                <p class="readlessbutton">
+                    <a href="#readmore4" onclick="openclose(this);">Close</a>
+                </p>
+            </div>
         </div>
-        <div class = "card-panel">
-            <p><canvas id = "Chart" width="100%" height="50px"></canvas></p>
-        </div>
-        <div class="summary">
-            <p>You have posted <b id="sumpostcounter"></b> times.</p>
-            <p><b id="publiccounter"></b> times in public</p>
-            <p><b id="unlistedcounter"></b> times in unlisted</p>
-            <p><b id="privatecounter"></b> times in private</p>
-            <p><b id="directcounter"></b> times in direct</p>
-            <p>You have boosted <b id="boostcounter"></b> toots.</p>
-            <p>You have replied <b id="replycounter"></b> times.</p>
-        </div>
-        <div class = "card-panel">
-            <p><canvas id = "Chart" width="100%" height="50px"></canvas></p>
-        </div>
-        <div class="ranking">
-            <p>You have mentioned <b id="mentioncounter"></b> times.</p>
-            <p>You have mentioned to...</p>
-            <b id="replyrank"></b>
-            <p>You have favourited <b id="favcounter"></b> times.</p>
-            <p>You have favourited toots of...</p>
-            <b id="favrank"></b>
-        </div>
+        
+        
+        
         <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="moment.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
         <script src="mastodon.js"></script>
 
     </body>
