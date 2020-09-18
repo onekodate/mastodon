@@ -1,6 +1,13 @@
+html{
+    background-color:#191b22;
+}
+
 body {
-    height: 100%;
-    width: 100%;
+    font-family:'Script';
+    color:#fff;
+    width:100%;
+    margin-left:auto;
+    margin-right:auto;
 }
 
 .invisible {
@@ -15,70 +22,122 @@ body {
     position: fixed;
 }
 
-.readmorearea {
-    display: none;
+.card-panel{
+    background-color:#8b0000;
+    color:#fff;
 }
 
-.six {
-    width:14px;
+.card-panel button{
+    background-color:#808080
+}
+
+/* Loading */
+h1{
+    font-family:'arial unicode ms';
+    width:300px;
+    font-size:14px;
+    padding-top:20px;
+    margin-left:160px;
+}
+
+.loaddiv{
+    font-family:'arial unicode ms';
+    font-size:14px;
+    background-color:#313543;
+    color:#fff;
+    width:600px;
+    margin-top:10px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;    
+    border-radius:5px;
+}
+
+.loadtable{
+    width:500px;
+    margin-left:50px;
+}
+
+.submit{
+    background-color:#2b90d9;
+    width:300px;
+    border:none ;
+    margin-bottom:10px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* Summary */
+.result{
+    width:80%;
+    background-color:#313543;
+    margin-left:auto;
+    margin-right:auto;
+    padding-top:0;
+    border-radius:5px;
+    margin-top:10px;
+}
+
+.opclbutton{
+    width:100%;
+    margin-left:auto;
+    margin-right:auto;
+    background-color:#2b90d9;
+    color:#fff;
+    border:none;
+    border-radius:5px;
+}
+
+a{
+    color:#9baec8;
+}
+
+.readlessbutton{
+    clear:both;
+    text-align:center;
+}
+
+.post{
+    float:left;
+    margin-left:5%;
+}
+
+.six{
+    text-align:right;
+}
+
+.others{
+    float:right;
+    margin-right:5%;
+}
+
+/* Figure */
+.figure{
+    text-align:center;
+}
+
+.figure table{
+    margin-left:auto;
+    margin-right:auto;
+    width:300px;
+}
+
+td, th{
+    padding:0px 0px;
+}
+
+b{
+    font-weight:100;
+}
+
+/* Ranking */
+.ranking{
+    width:100%;
+    margin-left:auto;
+    margin-right:auto;
 }
 
 .ranking div{
     float:left;
+    margin-left:20px;
 }
-
-.readlessbutton {
-    clear:both;
-}
-
-.summary div{
-    float:left;
-}
-
-.loading{
-    background-color:"#808080";
-    margin-left:30px;
-    
-}
-
-.readmore1{
-    background-color:"#fff";
-    margin-left:30px;
-    width:200px;
-    text-align:center;
-    
-}
-
-.readmore2{
-    background-color:"#B0C4DE";
-    margin-left:30px;
-    width:200px;
-    text-align:center;
-    
-}
-
-.readmore3{
-    background-color:"#98FB98";
-    margin-left:30px;
-    width:200px;
-    text-align:center;
-    
-}
-
-.readmore4{
-    background-color:"#FAEB07";
-    margin-left:30px;
-    width:200px;
-    text-align:center;
-    
-}
-
-.readmorebutton{
-    text-align:center;
-}
-
-.readlessbutton{
-    text-align:center;
-}
-
-
