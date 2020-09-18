@@ -1,0 +1,84 @@
+body {
+    height: 100%;
+    width: 100%;
+}
+
+.invisible {
+    display: none;
+}
+
+.progress {
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    top: 0;
+    position: fixed;
+}
+
+.readmorearea {
+    display: none;
+}
+
+.six {
+    width:14px;
+}
+
+.ranking div{
+    float:left;
+}
+
+.readlessbutton {
+    clear:both;
+}
+
+.summary div{
+    float:left;
+}
+
+.loading{
+    background-color:"#808080";
+    margin-left:30px;
+    
+}
+
+.readmore1{
+    background-color:"#fff";
+    margin-left:30px;
+    width:200px;
+    text-align:center;
+    
+}
+
+.readmore2{
+    background-color:"#B0C4DE";
+    margin-left:30px;
+    width:200px;
+    text-align:center;
+    
+}
+
+.readmore3{
+    background-color:"#98FB98";
+    margin-left:30px;
+    width:200px;
+    text-align:center;
+    
+}
+
+.readmore4{
+    background-color:"#FAEB07";
+    margin-left:30px;
+    width:200px;
+    text-align:center;
+    
+}
+
+.readmorebutton{
+    text-align:center;
+}
+
+.readlessbutton{
+    text-align:center;
+}
+
+
