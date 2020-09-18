@@ -3,7 +3,10 @@
     <head>
         <meta charset=utf-8>
         <title>mastodon</title>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
         <link rel="stylesheet" href="mastodon.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     
     <body>
@@ -13,22 +16,24 @@
               
         <div class="row container" id="error-box" style="display: none;">
             <div class="card-panel">
-                <button onclick='document.getElementById("error-box").style.display = "none"'>閉じる</button>
+                <button onclick='document.getElementById("error-box").style.display = "none"'>×</button>
                 <span>Error: <span id="error-text"></span></span>
             </div>
         </div> 
                
         <div id="load" class="">
-            <div class="loading">
-                <p>
-                    <b>outbox.json</b>
-                    <input type=file id=outbox accept=".json">
-                </p>   
-                             
-                <p>
-                    <b>likes.json</b>
-                    <input type=file id=likes accept=".json">
-                </p>
+            <div class="loaddiv">
+                <h1>Welcome to Mastodon Archive Viewer</h1>
+                <table class="loadtable">
+                    <tr class="loadtr">
+                        <th>outbox.json</th>
+                        <th><input type=file id=outbox accept=".json"></th>
+                    </tr>
+                    <tr class="loadtr">
+                        <th>likes.json</th>
+                        <th><input type=file id=likes accept=".json"></th>
+                    </tr>
+                </table>
                                 
                 <p>
                     <button class="submit" onclick="loadfile()">Load</button>
@@ -37,10 +42,8 @@
         </div>
                 
         <div id="main" class="invisible">
-            <p class="readmorebutton">
-                <a href="#readmore1" onclick="openclose(this);">Summary</a>
-            </p>             
-                        
+            <div class="result">
+            <button class="opclbutton" href="#readmore1" onclick="openclose(this);">Summary</button>                       
             <div id="readmore1" class="">
                 <div class="figure">
                     <p><canvas id="circle" height="70px"></canvas></p>
@@ -49,10 +52,24 @@
 
                     <div class="post">
                         <p>You have posted <b id="sumpostcounter"></b> times.</p>
-                        <p><b class="six" id="publiccounter"></b> times in public</p>
-                        <p><b class="six" id="unlistedcounter"></b> times in unlisted</p>
-                        <p><b class="six" id="privatecounter"></b> times in private</p>
-                        <p><b class="six" id="directcounter"></b> times in direct</p>
+                        <table>
+                            <tr>
+                                <td class="six"><b id="publiccounter"></b></td>
+                                <td>  times in public</td>
+                            </tr>
+                            <tr>
+                                <td class="six"><b id="unlistedcounter"></b></td>
+                                <td>  times in unlisted</td>
+                            </tr>
+                            <tr>
+                                <td class="six"><b id="privatecounter"></b></td>
+                                <td>  times in private</td>
+                            </tr>
+                            <tr>
+                                <td class="six"><b id="directcounter"></b></td>
+                                <td>  times in direct</td>
+                            </tr>
+                        </table>
                     </div>
                 
 
@@ -67,19 +84,20 @@
                     <a href="#readmore1" onclick="openclose(this);">Close</a>
                 </p>
             </div>
-                       
-            <p class="readmorebutton">
-                <a href="#readmore2" onclick="openclose(this);">Figure</a>
-            </p> 
-                     
+            </div>
+            
+            <div class="result">
+            <button class="opclbutton" href="#readmore2" onclick="openclose(this);">Figure</button>  
             <div id="readmore2" class="invisible">            
                 <div class = "figure">
                     <p>
                         You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%) and <b id="aver"></b> times per day.
                     </p>
                     <p><canvas id = "dateplot" width="80%" height="70px"></canvas></p>
+                    <p>You tooted most...</p>
                     <b id="daterank"></b>
                     <p><canvas id = "timeplot" width="80%" height="50px"></canvas></p>
+                    <p>You toot most...</p>
                     <b id="timerank"></b>
                     <p><canvas id = "datetimescatter" width="100%" height="50px"></canvas></p>
                 </div>
@@ -87,11 +105,10 @@
                     <a href="#readmore2" onclick="openclose(this);">Close</a>
                 </p>
             </div>  
-                      
-            <p class="readmorebutton">
-                <a href="#readmore3" onclick="openclose(this);">Ranking</a>
-            </p>  
-                      
+            </div>
+            
+            <div class="result">          
+            <button class="opclbutton" href="#readmore3" onclick="openclose(this);">Ranking</button>  
             <div id="readmore3" class="invisible">                   
                 <div class="ranking">
                     <div class="mention">
@@ -112,11 +129,11 @@
                 <p class="readlessbutton">
                     <a href="#readmore3" onclick="openclose(this);">Close</a>
                 </p>
-            </div>   
-            <p class="readmorebutton">
-                <a href="#readmore4" onclick="openclose(this);">Search</a>
-            </p>  
-                      
+            </div>
+            </div>
+            
+            <div class="result">   
+            <button class="opclbutton" href="#readmore4" onclick="openclose(this);">Search</button>  
             <div id="readmore4" class="invisible">                     
                 <div class="search">
                     <p>
@@ -124,6 +141,7 @@
                 <p class="readlessbutton">
                     <a href="#readmore4" onclick="openclose(this);">Close</a>
                 </p>
+            </div>
             </div>
         </div>
         
