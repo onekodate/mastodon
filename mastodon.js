@@ -23,7 +23,10 @@ function loadfile(){
         }catch(e){
             error("We got an error in loading files"+e);
         }
-    }else error("No files selected");
+    }else{
+        error("No files selected");
+        loading(0);
+    }
 }
                 
 function error(text){
@@ -56,6 +59,7 @@ function openclose(btn){
 }
 
 function loadPage(){
+    loading(1)
     //変数割り当て
     var posts=[], boosts=[], datetimelist=[], datecount={}, datelabel=[], datelist=[], timelist=[];
     var timecount=new Array(24*60), timelabel=new Array(24*60);
@@ -115,7 +119,7 @@ function loadPage(){
         data:{
             datasets:[{
                 data:[public_counter, unlisted_counter, private_counter, direct_counter, boost_counter],
-                backgroundColor:["rgb(255,0,255)","rgb(0,255,0)","rgb(0,0,255)","rgb(255,0,0)","rgb(0,128,0)"]
+                backgroundColor:["#5f9ea0","#008080","#2e8b57","#2f4f4f","#483d8b"]
             }],
             labels:["Public", "Unlisted", "Private", "Direct", "Boost"],
         }
@@ -153,16 +157,18 @@ function loadPage(){
             labels: timelabel,
             datasets: [{
                 label:'post',
-                borderColor: "#607d8b",
+                borderColor: "#b0c4de",
                 data:timecount,
                 lineTension:0,
                 pointRadius:0,
                 borderWidth:1,
+                backgroundColor:"#4682b4",
             }]
         },
         options:{
             scales:{
                 xAxes:[{
+                    scaleLabel:{fontColor:"#ffffff"},
                     ticks: {
                         maxTicksLimit:24,
                         maxRotation:0,
