@@ -41,10 +41,10 @@
             </div>
         </div>
                 
-        <div id="main" class="invisible">
+        <div id="main" class="">
             <div class="result">
             <button class="opclbutton" href="#readmore1" onclick="openclose(this);">Summary</button>                       
-            <div id="readmore1" class="">
+            <div id="readmore1" class="invisible">
                 <div class="figure">
                     <p><canvas id="circle" height="70px"></canvas></p>
                 </div>
@@ -134,9 +134,16 @@
             
             <div class="result">   
             <button class="opclbutton" href="#readmore4" onclick="openclose(this);">Search</button>  
-            <div id="readmore4" class="invisible">                     
-                <div class="search">
-                    <p>
+            <div id="readmore4" class="">                     
+                <div class=search>
+                    <div class=searchbox>
+                        <div class=word>Word<input class=text type=text id=word></div>
+                        <div class=boost>Boost From<input class=text type=text id=boost></div>
+                        <div class=reply>Reply To<input class=text type=text id=reply></div>
+                    </div>
+                    <input class=submit type=submit value=Search onclick="loadSearch();"><br>
+                    <b id=searchcontent></b><br>
+                    <b id=searchresult></b>
                 </div>
                 <p class="readlessbutton">
                     <a href="#readmore4" onclick="openclose(this);">Close</a>
@@ -144,9 +151,15 @@
             </div>
             </div>
         </div>
-        
-        
-        
+        <div class="footer">
+            <div class="foot">
+                <h2>全てJavaScriptで処理されているため、サーバーにデータは保存されません。</h2>
+                <a href="https://github.com/onekodate/mastodon">ソースコード</a><br>
+                開発者:<a href="https://mstdn.beer/web/accounts/80060">@onekodate@mstdn.beer</a><br>
+                <h2>JavascriptでMastodonのアーカイブを可視化するアイデアとソースコードの多くはnzwsさんによるものです。</h3>
+                <a href="https://github.com/yuzulabo/Mastodon-Archive-Viewer">nzwsさんによるMastodon-Archive-Viewer</a>
+            </div>
+        </div>
         <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="moment.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
