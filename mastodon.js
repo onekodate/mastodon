@@ -199,7 +199,7 @@ function loadPage(){
                 label:'post',
                 borderColor: "#607d8b",
                 data:datetimelist,
-                pointRadius:1.5;
+                pointRadius:1.5,
             }]
         },
         options:{
