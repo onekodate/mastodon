@@ -8,6 +8,7 @@ body {
     width:100%;
     margin-left:auto;
     margin-right:auto;
+    text-align:center;
 }
 
 .invisible {
@@ -34,6 +35,88 @@ body {
 }
 
 /* Loading */
+#inputFile {
+    position: relative;
+    text-align: center;
+}
+
+#dropArea {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 100px 0 0;
+    margin:0px;
+    background: rgba(22, 165, 191, 0);
+    transition: all 0.25s cubic-bezier(0.21, 0.51, 0.51, 1);
+}
+
+#dropArea.dragover {
+    border: 2px solid #16a5bf;
+    background: rgba(22, 165, 191, 0.6);
+}
+
+#uploadFile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: block;
+    width: 300px;
+    height: 80px;
+    opacity: 0;
+}
+
+#upFileWrap{
+    width:300px;
+    height:80px;
+    display:inline-block;
+    margin-top:100px;
+    margin-bottom:40px;
+}
+
+#inputFileWrap {
+    position: relative;
+    display: inline-block;
+}
+
+#btnInputFile,
+#btnChangeFile {
+    display: table;
+    width: 300px;
+}
+
+#btnChangeFile {
+    display: none;
+}
+
+
+#btnInputFile span,
+#btnChangeFile span {
+    position: relative;
+    z-index: 2;
+    display: table-cell;
+    width: 300px;
+    height: 80px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background: #333;
+    text-decoration: none;
+    color: #fff;
+    font-size: 26px;
+    line-height: 1;
+    font-weight: bold;
+    vertical-align: middle;
+}
+
+#upFileWrap.selected #btnInputFile {
+    display: none;
+}
+
+#upFileWrap.selected #btnChangeFile {
+    display: table;
+}
+
 h1{
     font-family:'arial unicode ms';
     width:300px;
@@ -42,7 +125,15 @@ h1{
     margin-left:160px;
 }
 
-.loaddiv{
+.dropzone{
+    width:300px;
+    height:300px;
+}
+
+
+
+
+#load{
     font-family:'arial unicode ms';
     font-size:14px;
     background-color:#313543;
