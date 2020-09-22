@@ -410,4 +410,3 @@ function loadFile(files){
     }
     loading(0);
 }
-    
