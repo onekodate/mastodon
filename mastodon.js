@@ -1,34 +1,4 @@
 var outbox_json, likes_json;
-function loadfile(){
-    loading(1);
-    outbox_json=null;
-     likes_json=null;
-    var outbox_json_file=elemid("outbox").files[0];
-    var  likes_json_file=elemid("likes").files[0];
-    if(outbox_json_file && likes_json_file){
-        try{
-            var file_reader = new FileReader();
-            file_reader.onload = function(event){
-                var json=JSON.parse(event.target.result);
-                if(json["id"]==="outbox.json"){
-                    outbox_json = json;
-                    file_reader.readAsText(likes_json_file);
-                }else if(json["id"]==="likes.json"){
-                    likes_json = json;
-                    if(!outbox_json) error("You assigned each file to wrong place");
-                }else error("You got a wrong files");
-                if(outbox_json && likes_json) loadPage();
-            };
-            file_reader.readAsText(outbox_json_file);
-        }catch(e){
-            error("We got an error in loading files"+e);
-        }
-    }else{
-        error("No files selected");
-        loading(0);
-    }
-}
-                
 function error(text){
     elemid("error-text").innerText=text;
     elemid("error-box").style.display="block";
@@ -48,13 +18,8 @@ function openclose(btn){
     const btnId =  btn.getAttribute("href");  
     const targetId = btnId.slice(1);
     let now=elemid(targetId).className;
-    if(now==="invisible"){
-        elemid(targetId).className="";
-//        if(targetId==="readmore5") elemid(btnId).className="invisible";
-    }else{
-        elemid(targetId).className="invisible";
-//        if(targetId==="readmore5") elemid(btnId).className="";
-    }        
+    if(now==="invisible") elemid(targetId).className="";
+    else elemid(targetId).className="invisible";        
     return false;
 }
 
@@ -71,21 +36,23 @@ function loadPage(){
     timelabel.push('24:00');
     var boost_counter=0, private_counter=0, unlisted_counter=0, direct_counter=0, public_counter=0;
     //outbox読み取り
-    for (const cont of outbox_json["orderedItems"]){
+    for(cont of outbox_json["orderedItems"]){
         let date=new Date(cont['published']);
-        date.setDate(date.getHours()+9);
         const timenum = date.getHours()*60+date.getMinutes();
         timecount[timenum]++;
+        var datetime={};
+        datetime.x=date;
+        datetime.y=timenum; 
+        datetimelist.push(datetime);
         timelist.push(set2fig(date.getHours())+":00-"+set2fig(date.getHours()+1)+":00");
         const time = set2fig(date.getHours())+":"+set2fig(date.getMinutes())+":"+set2fig(date.getSeconds())+":"+date.getMilliseconds();
         date = date.getFullYear()+"-"+set2fig(date.getMonth()+1)+"-"+set2fig(date.getDate());
         datelist.push(date);
-        if(!datecount[date]) datecount[date]=0;
+        if(!datecount[date]){
+            datecount[date]=0;
+            console.log(date);
+        }
         datecount[date]++;
-        let datetime={};
-        datetime.X=date;
-        datetime.Y=timenum; 
-        datetimelist.push(datetime);
 
         if(cont['type']==='Announce'){
             boosts[date+" "+time]=cont['object'];
@@ -126,7 +93,7 @@ function loadPage(){
     });
     //ranking
     var replyto=[];
-    for (var key in posts){
+    for(key in posts){
         var obj=posts[key];
         while(obj.indexOf('@')!==-1&&obj.indexOf(' ')!==-1){
             replyto.push(obj.substring(obj.indexOf('@')+1,obj.indexOf(' ')));
@@ -136,7 +103,7 @@ function loadPage(){
     document.getElementById('replyrank').innerHTML = ranksort(replyto,30);
     
     var boostuser=[]
-    for(var key in boosts){
+    for(key in boosts){
         var boost=boosts[key];
         if(boost.indexOf('users')!==-1&&boost.indexOf('statuses')!==-1){
             boostuser.push(boost.substring(boost.indexOf('users')+6,boost.indexOf('statuses')-1));
@@ -145,7 +112,7 @@ function loadPage(){
     elemid("boostrank").innerHTML=ranksort(boostuser,30);
     
     var favuser=[];
-    for(const like of likes_json['orderedItems']){
+    for(like of likes_json['orderedItems']){
         if(like.indexOf('users')!==-1&&like.indexOf('statuses')!==-1){
             favuser.push(like.substring(like.indexOf('users')+6,like.indexOf('statuses')-1));
         }
@@ -153,18 +120,15 @@ function loadPage(){
     elemid("favrank").innerHTML = ranksort(favuser,30);
     //figure
     var ctx = elemid("timeplot");
+
     var myChart = new Chart(ctx,{
-        type:'line',
+        type:'bar',
         data: {
             labels: timelabel,
             datasets: [{
                 label:'post',
-                borderColor: "#b0c4de",
                 data:timecount,
-                lineTension:0,
-                pointRadius:0,
-                borderWidth:1,
-                backgroundColor:"#4682b4",
+                backgroundColor:"#b0c4de",
             }]
         },
         options:{
@@ -180,8 +144,6 @@ function loadPage(){
                 yAxes:[{
                     gridLines:{color:"#9baec8",},
                     ticks: {
-                        maxTicksLimit:24,
-                        maxRotation:0,
                         fontColor:"#ffffff",
                     },
                 }],
@@ -190,10 +152,11 @@ function loadPage(){
     });
     
     var dcs=[];
-    for(const key in datecount){
+    var keys=Object.keys(datecount).sort();
+    for(key of keys){
         let dc = {};
-        dc.X=key;
-        dc.Y=datecount[key];
+        dc.x=new Date(key);
+        dc.y=datecount[key];
         dcs.push(dc);
     }
     const dateinit = new Date(datelist[0]);
@@ -205,32 +168,88 @@ function loadPage(){
     elemid("aver").innerText=Math.round(Object.keys(posts).length/dcs.length);
     elemid("daterank").innerHTML = ranksort(datelist,5);
     elemid("timerank").innerHTML = ranksort(timelist,5);
-    /*
-    var ctx = document.getElementById("dateplot");
+/*
+                <div class="figure">
+                    <p><canvas id="timerank" height="70px"></canvas></p>
+                </div>
+    const ans=timerank(timelist);    
+    var ctx=elemid("timerank");
     var myChart = new Chart(ctx,{
-        type:'line',
+        type:'doughnut',
+        data:{
+            datasets:[{
+                data:ans.num,
+                backgroundColor:["#E60012","#EB6100","#F39800","#FCC800","#FFF100","#CFDB00",
+                                 "#8FC31F","#22AC38","#009944","#009B6B","#009E96","#00A0C1",
+                                 "#00A0E9","#0086D1","#0068B7","#00479D","#1D2088","#601986",
+                                 "#920783","#BE0081","#E4007F","#E5006A","#E5004F","#E60033"],
+                borderWidth:1,
+            }],
+            labels:ans.time,
+        },
+        options:{legend:{display:false,},},
+    });
+    */
+    
+    var ctx = elemid("datetimescatter");
+    var myChart = new Chart(ctx,{
+        type:'scatter',
         data: {
             datasets: [{
                 label:'post',
                 borderColor: "#607d8b",
-                data:dcs,
-                lineTension:0,
-                pointRadius:0,
-                borderWidth:1,
+                data:datetimelist,
             }]
         },
         options:{
             scales:{
                 xAxes:[{
                     type:'time',
-                    time:{
-                        unit:'day'
-                    }
-                }]
+                    gridLines:{color:"#9baec8",},
+                    ticks: {
+                        fontColor:"#ffffff",
+                    },
+                }],
+                yAxes:[{
+                    gridLines:{color:"#9baec8",},
+                    ticks: {
+                        fontColor:"#ffffff",
+                    },
+                }],
+            },
+        }
+    });  
+    
+    var ctx=elemid("dateplot");
+    var myChart = new Chart(ctx,{
+        type:'bar',
+        data: {
+            datasets: [{
+                label:'post',
+                data:dcs,
+                backgroundColor:"#f0fff0",            
+            }]
+        },
+        options:{
+            scales:{
+                xAxes:[{
+                    type:'time',
+                    gridLines:{color:"#9baec8",},
+                    ticks: {
+                        fontColor:"#ffffff",
+                    },
+                }],
+                yAxes:[{
+                    gridLines:{color:"#9baec8",},
+                    ticks: {
+                        fontColor:"#ffffff",
+                    },
+                }],
             },
         }
     });    
-    */
+
+    elemid("dropArea").className="invisible";
     elemid("load").className="invisible";
     elemid("main").className="";
     loading(0)
@@ -240,7 +259,7 @@ function ranksort(replyto,n){
     replyto.sort();
     replyto.reverse();
     var namelist=[], counterlist=[], replyrank=['<table>'];
-    for (const name of replyto){
+    for(name of replyto){
         if(namelist.indexOf(name)===-1){
             namelist.push(name);
             counterlist.push(1);
@@ -256,12 +275,35 @@ function ranksort(replyto,n){
         replyrank.push(namelist[t]);
         replyrank.push('</th><th class="right">');
         replyrank.push(counterlist[t]);
-        replyrank.push('times');
+        replyrank.push(' times');
         replyrank.push('</th></tr>');
         counterlist[t]=0;           
     }
     replyrank.push('</table>');
     return replyrank.join('');
+}
+
+function timerank(timelist){
+    var timerank={};
+    for(const time of timelist){
+        if(!timerank[time]) timerank[time]=0;
+        timerank[time]++;
+    }
+    var keylist=[], numlist=[];
+    for(key in timerank){
+        keylist.push(key);
+        numlist.push(timerank[key]);    
+    }
+    var ans={};
+    ans.time=[];
+    ans.num=[];
+    for(let i=0;i<24;i++){
+        const index=numlist.indexOf(Math.max.apply(null,numlist));
+        ans.time.push(keylist[index]);
+        ans.num.push(numlist[index]);
+        numlist[index]=-1;
+    }
+    return ans;
 }
 
 function loadSearch(){
@@ -276,7 +318,7 @@ function loadSearch(){
         request=elemid("word").value+" from toot content.";
         elemid("word").value="";
     }else if(elemid("boost").value){
-        for(var key in boosts){
+        for(key in boosts){
             if(boosts[key].indexOf(elemid("boost").value)!==-1){
                 list[key]='<a target="_blank" href='+boosts[key]+">"+boosts[key]+"</a>";
             }
@@ -290,7 +332,7 @@ function loadSearch(){
                 replylist[replies[key].substr(replies[key].indexOf('statuses')+9,5)]=key;
             }
         }
-        for(var key in replylist){
+        for(key in replylist){
             list[replylist[key]]='<a target="_blank" href='+replies[replylist[key]]+">"+posts[replylist[key]]+"</a>";
         }
         request=elemid("reply").value+" from reply user.";
@@ -322,3 +364,50 @@ function set2fig(num){
     if(num<10) ret="0"+num;
     return ret
 }
+
+var fileArea = elemid('dropArea');
+var fileInput = elemid('uploadFile');
+
+fileArea.addEventListener('dragover', function(e){
+    e.preventDefault();
+    fileArea.classList.add('dragover');
+});
+
+fileArea.addEventListener('dragleave', function(e){
+    e.preventDefault();
+    fileArea.classList.remove('dragover');
+});
+
+fileArea.addEventListener('drop', function(e){
+    e.preventDefault();
+    fileArea.classList.remove('dragover');
+    loadFile(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', ()=>{
+    loadFile(fileInput.files);
+});
+
+function loadFile(files){
+    loading(1);
+    for(file of files){
+        if(file.type==="application/json"){
+            var reader = new FileReader();
+            reader.onload=function(event){
+                const json=JSON.parse(event.target.result);
+                if(json["id"]==="outbox.json") outbox_json=json;
+                else if(json["id"]==="likes.json") likes_json=json;
+                if(!outbox_json&&!likes_json) error("You chose wrong file.");
+                else if(!outbox_json) error("Choose outbox.json");
+                else if(!likes_json) error("Choose likes.json");
+                else{
+                    elemid("error-box").style.display="none";
+                    loadPage();
+                }
+            };  
+            reader.readAsText(file);
+        }
+    }
+    loading(0);
+}
+    
