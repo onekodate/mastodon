@@ -1,11 +1,12 @@
 var outbox_json, likes_json;
-function error(text){
-    elemid("error-text").innerText=text;
-    elemid("error-box").style.display="block";
-}
 
 function elemid(id){
     return document.getElementById(id);
+}
+
+function error(text){
+    elemid("error-text").innerText=text;
+    elemid("error-box").style.display="block";
 }
 
 function loading(mode){
@@ -23,10 +24,16 @@ function openclose(btn){
     return false;
 }
 
+function set2fig(num){
+    var ret=num;
+    if(num<10) ret="0"+num;
+    return ret
+}
+
 var posts={}, boosts={}, replies={};
 function loadPage(){
     loading(1)
-    //変数割り当て
+/* Variable allocation */
     var datetimelist=[], datecount={}, datelabel=[], datelist=[], timelist=[];
     var timecount=new Array(24*60), timelabel=new Array(24*60);
     for(let i=0;i<timecount.length;i++){
@@ -35,31 +42,29 @@ function loadPage(){
     }
     timelabel.push('24:00');
     var boost_counter=0, private_counter=0, unlisted_counter=0, direct_counter=0, public_counter=0;
-    //outbox読み取り
+
+/* Reading outbox_json */
     for(cont of outbox_json["orderedItems"]){
         let date=new Date(cont['published']);
         const timenum = date.getHours()*60+date.getMinutes();
         timecount[timenum]++;
-        var datetime={};
-        datetime.x=date;
-        datetime.y=timenum; 
-        datetimelist.push(datetime);
+        let datetime={};
+            datetime.x=date;
+            datetime.y=timenum; 
+            datetimelist.push(datetime);
         timelist.push(set2fig(date.getHours())+":00-"+set2fig(date.getHours()+1)+":00");
-        const time = set2fig(date.getHours())+":"+set2fig(date.getMinutes())+":"+set2fig(date.getSeconds())+":"+date.getMilliseconds();
+        const time=set2fig(date.getHours())+":"+set2fig(date.getMinutes())+":"+set2fig(date.getSeconds())+":"+date.getMilliseconds();
         date = date.getFullYear()+"-"+set2fig(date.getMonth()+1)+"-"+set2fig(date.getDate());
-        datelist.push(date);
-        if(!datecount[date]){
-            datecount[date]=0;
-            console.log(date);
-        }
-        datecount[date]++;
+            datelist.push(date);
+            if(!datecount[date]) datecount[date]=0;
+                datecount[date]++;
 
         if(cont['type']==='Announce'){
             boosts[date+" "+time]=cont['object'];
             boost_counter++;
         }else{
             posts[date+" "+time]=cont['object']['content'].replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
-            if(cont['object']['inReplyTo']) replies[date+" "+time]=cont['object']['inReplyTo'];;
+            if(cont['object']['inReplyTo']) replies[date+" "+time]=cont['object']['inReplyTo'];
             if(cont['cc'].length===0){
                 if(cont['to'].length!==0){
                 if(cont['to'][0].indexOf('followers')===-1) direct_counter++;
@@ -69,7 +74,8 @@ function loadPage(){
             else unlisted_counter++;
         }
     }
-    //summary
+    
+/* Summary */
     elemid("sumpostcounter").innerText=public_counter+unlisted_counter+private_counter+direct_counter;    
     elemid("publiccounter").innerText=public_counter;
     elemid("unlistedcounter").innerText=unlisted_counter;
@@ -78,8 +84,7 @@ function loadPage(){
     elemid("boostcounter").innerText=boost_counter;
     elemid("replycounter").innerText=Object.keys(replies).length;
     elemid("favcounter").innerText=likes_json['totalItems'];
-    var ctx=elemid("circle");
-    var myChart = new Chart(ctx,{
+    var myChart = new Chart(elemid("circle"),{
         type:'doughnut',
         data:{
             datasets:[{
@@ -91,7 +96,8 @@ function loadPage(){
         },
         options:{legend:{display:false,},},
     });
-    //ranking
+    
+/* Ranking */
     var replyto=[];
     for(key in posts){
         var obj=posts[key];
@@ -100,28 +106,69 @@ function loadPage(){
             obj=obj.substr(obj.indexOf(' ')+1);
         }
     }
-    document.getElementById('replyrank').innerHTML = ranksort(replyto,30);
-    
-    var boostuser=[]
+    var boostuser=[];
     for(key in boosts){
         var boost=boosts[key];
         if(boost.indexOf('users')!==-1&&boost.indexOf('statuses')!==-1){
             boostuser.push(boost.substring(boost.indexOf('users')+6,boost.indexOf('statuses')-1));
         }
     }
-    elemid("boostrank").innerHTML=ranksort(boostuser,30);
-    
     var favuser=[];
     for(like of likes_json['orderedItems']){
         if(like.indexOf('users')!==-1&&like.indexOf('statuses')!==-1){
             favuser.push(like.substring(like.indexOf('users')+6,like.indexOf('statuses')-1));
         }
     }
+    elemid('replyrank').innerHTML = ranksort(replyto,30);
+    elemid("boostrank").innerHTML=ranksort(boostuser,30);
     elemid("favrank").innerHTML = ranksort(favuser,30);
-    //figure
-    var ctx = elemid("timeplot");
-
-    var myChart = new Chart(ctx,{
+    
+/* Figure */
+    var dcs=[];
+    for(key of Object.keys(datecount).sort()){
+        let dc = {};
+        dc.x=new Date(key);
+        dc.y=datecount[key];
+        dcs.push(dc);
+    }
+    const dateinit = new Date(datelist[0]);
+    const datelast = new Date(datelist[datelist.length-1]);
+    const wholedays = Math.ceil((datelast-dateinit)/60/60/24/1000);
+    elemid("wholedays").innerText=wholedays;
+    elemid("daten").innerText=dcs.length;
+    elemid("uprate").innerText=Math.round(dcs.length/wholedays*1000)/10;
+    elemid("aver").innerText=Math.round(Object.keys(posts).length/dcs.length);
+    elemid("daterank").innerHTML = ranksort(datelist,5);
+    elemid("timerank").innerHTML = ranksort(timelist,5);
+    
+    var myChart = new Chart(elemid("dateplot"),{
+        type:'bar',
+        data: {
+            datasets: [{
+                label:'post',
+                data:dcs,
+                backgroundColor:"#f0fff0",            
+            }]
+        },
+        options:{
+            scales:{
+                xAxes:[{
+                    type:'time',
+                    gridLines:{color:"#9baec8",},
+                    ticks: {
+                        fontColor:"#ffffff",
+                    },
+                }],
+                yAxes:[{
+                    gridLines:{color:"#9baec8",},
+                    ticks: {
+                        fontColor:"#ffffff",
+                    },
+                }],
+            },
+        }
+    }); 
+    var myChart = new Chart(elemid("timeplot"),{
         type:'bar',
         data: {
             labels: timelabel,
@@ -150,49 +197,7 @@ function loadPage(){
             },
         }
     });
-    
-    var dcs=[];
-    var keys=Object.keys(datecount).sort();
-    for(key of keys){
-        let dc = {};
-        dc.x=new Date(key);
-        dc.y=datecount[key];
-        dcs.push(dc);
-    }
-    const dateinit = new Date(datelist[0]);
-    const datelast = new Date(datelist[datelist.length-1]);
-    const wholedays = Math.ceil((datelast-dateinit)/60/60/24/1000);
-    elemid("wholedays").innerText=wholedays;
-    elemid("daten").innerText=dcs.length;
-    elemid("uprate").innerText=Math.round(dcs.length/wholedays*1000)/10;
-    elemid("aver").innerText=Math.round(Object.keys(posts).length/dcs.length);
-    elemid("daterank").innerHTML = ranksort(datelist,5);
-    elemid("timerank").innerHTML = ranksort(timelist,5);
-/*
-                <div class="figure">
-                    <p><canvas id="timerank" height="70px"></canvas></p>
-                </div>
-    const ans=timerank(timelist);    
-    var ctx=elemid("timerank");
-    var myChart = new Chart(ctx,{
-        type:'doughnut',
-        data:{
-            datasets:[{
-                data:ans.num,
-                backgroundColor:["#E60012","#EB6100","#F39800","#FCC800","#FFF100","#CFDB00",
-                                 "#8FC31F","#22AC38","#009944","#009B6B","#009E96","#00A0C1",
-                                 "#00A0E9","#0086D1","#0068B7","#00479D","#1D2088","#601986",
-                                 "#920783","#BE0081","#E4007F","#E5006A","#E5004F","#E60033"],
-                borderWidth:1,
-            }],
-            labels:ans.time,
-        },
-        options:{legend:{display:false,},},
-    });
-    */
-    
-    var ctx = elemid("datetimescatter");
-    var myChart = new Chart(ctx,{
+    var myChart = new Chart(elemid("datetimescatter"),{
         type:'scatter',
         data: {
             datasets: [{
@@ -220,35 +225,6 @@ function loadPage(){
             },
         }
     });  
-    
-    var ctx=elemid("dateplot");
-    var myChart = new Chart(ctx,{
-        type:'bar',
-        data: {
-            datasets: [{
-                label:'post',
-                data:dcs,
-                backgroundColor:"#f0fff0",            
-            }]
-        },
-        options:{
-            scales:{
-                xAxes:[{
-                    type:'time',
-                    gridLines:{color:"#9baec8",},
-                    ticks: {
-                        fontColor:"#ffffff",
-                    },
-                }],
-                yAxes:[{
-                    gridLines:{color:"#9baec8",},
-                    ticks: {
-                        fontColor:"#ffffff",
-                    },
-                }],
-            },
-        }
-    });    
 
     elemid("dropArea").className="invisible";
     elemid("load").className="invisible";
@@ -284,29 +260,7 @@ function ranksort(replyto,n){
     return replyrank.join('');
 }
 
-function timerank(timelist){
-    var timerank={};
-    for(const time of timelist){
-        if(!timerank[time]) timerank[time]=0;
-        timerank[time]++;
-    }
-    var keylist=[], numlist=[];
-    for(key in timerank){
-        keylist.push(key);
-        numlist.push(timerank[key]);    
-    }
-    var ans={};
-    ans.time=[];
-    ans.num=[];
-    for(let i=0;i<24;i++){
-        const index=numlist.indexOf(Math.max.apply(null,numlist));
-        ans.time.push(keylist[index]);
-        ans.num.push(numlist[index]);
-        numlist[index]=-1;
-    }
-    return ans;
-}
-
+/* Search */
 function loadSearch(){
     loading(1);
     var list={}, request=null;
@@ -355,19 +309,12 @@ function loadSearch(){
         resulttable.push('</table>');
         elemid("searchcontent").innerText="You are searching for "+request+" There are "+Object.keys(list).length+" results.";
         elemid("searchresult").innerHTML=resulttable.join('');
-    }
-    
+    }    
     loading(0);
 }
 
-function set2fig(num){
-    var ret=num;
-    if(num<10) ret="0"+num;
-    return ret
-}
-
+/* Loading */
 var fileArea = elemid('dropArea');
-var fileInput = elemid('uploadFile');
 
 fileArea.addEventListener('dragover', function(e){
     e.preventDefault();
@@ -385,8 +332,8 @@ fileArea.addEventListener('drop', function(e){
     loadFile(e.dataTransfer.files);
 });
 
-fileInput.addEventListener('change', ()=>{
-    loadFile(fileInput.files);
+elemid('uploadFile').addEventListener('change', ()=>{
+    loadFile(elemid('uploadFile').files);
 });
 
 function loadFile(files){
@@ -395,19 +342,17 @@ function loadFile(files){
         if(file.type==="application/json"){
             var reader = new FileReader();
             reader.onload=function(event){
+                elemid("error-box").style.display="none"; 
                 const json=JSON.parse(event.target.result);
                 if(json["id"]==="outbox.json") outbox_json=json;
                 else if(json["id"]==="likes.json") likes_json=json;
                 if(!outbox_json&&!likes_json) error("You chose wrong file.");
                 else if(!outbox_json) error("Choose outbox.json");
                 else if(!likes_json) error("Choose likes.json");
-                else{
-                    elemid("error-box").style.display="none";
-                    loadPage();
-                }
+                else loadPage();
             };  
             reader.readAsText(file);
-        }
+        }else error("You chose wrong file.");
     }
     loading(0);
 }
