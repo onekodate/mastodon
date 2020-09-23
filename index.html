@@ -2,18 +2,15 @@
 <html>
     <head>
         <meta charset=utf-8>
-        <title>mastodon</title>
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <title>Mastodon Archive Viewer</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
         <link rel="stylesheet" href="mastodon.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
-    
     <body>
         <div class="progress invisible" id="progress">
             <div class="indeterminate"></div>
-        </div>  
-        <div>      
+        </div>
+        <div class="header">
             <div class="row container" id="error-box" style="display: none;">
                 <div class="card-panel">
                     <button onclick='document.getElementById("error-box").style.display = "none"'>×</button>
@@ -46,19 +43,19 @@
                         <p>You have posted <b id="sumpostcounter"></b> times.</p>
                         <table>
                             <tr>
-                                <td class="six"><b id="publiccounter"></b></td>
+                                <td class="right"><b id="publiccounter"></b></td>
                                 <td>  times in public</td>
                             </tr>
                             <tr>
-                                <td class="six"><b id="unlistedcounter"></b></td>
+                                <td class="right"><b id="unlistedcounter"></b></td>
                                 <td>  times in unlisted</td>
                             </tr>
                             <tr>
-                                <td class="six"><b id="privatecounter"></b></td>
+                                <td class="right"><b id="privatecounter"></b></td>
                                 <td>  times in private</td>
                             </tr>
                             <tr>
-                                <td class="six"><b id="directcounter"></b></td>
+                                <td class="right"><b id="directcounter"></b></td>
                                 <td>  times in direct</td>
                             </tr>
                         </table>
@@ -82,13 +79,13 @@
                     <p>
                         You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%) and <b id="aver"></b> times per day.
                     </p>
-                    <p><canvas id = "dateplot" style="position:relative; width:90%"></canvas></p>
+                    <p><canvas id = "dateplot" style="position:relative; width:80%"></canvas></p>
                     <p>You tooted most...</p>
                     <b id="daterank"></b>
                     <p><canvas id = "timeplot" style="position:relative; height:100; width:90%"></canvas></p>
                     <p>You toot most...</p>
                     <b id="timerank"></b>
-                    <p><canvas id = "datetimescatter" style="position:relative; width:90%"></canvas></p>
+                    <p><canvas id = "datetimescatter" style="position:relative; width:80%"></canvas></p>
                 </div>
                 <p class="readlessbutton">
                     <a href="#readmore2" onclick="openclose(this);">Close</a>
