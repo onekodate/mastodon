@@ -220,6 +220,12 @@ function loadPage(){
                     gridLines:{color:"#9baec8",},
                     ticks: {
                         fontColor:"#ffffff",
+                        min:0,
+                        max:1441,
+                        stepSize:60,
+                        callback:function(value){
+                            return timelabel[value];
+                        },
                     },
                 }],
             },
