@@ -9,6 +9,7 @@ body {
     margin-left:auto;
     margin-right:auto;
     text-align:center;
+    overflow-y:scroll;
 }
 
 .invisible {
@@ -233,7 +234,8 @@ b{
     margin-left:20px;
 }
 */
-.right{
+
+.rankright{
     text-align:right;
 }
 
@@ -259,6 +261,10 @@ b{
     float:left;
     margin-left:auto;
     margin-right:auto;
+}
+.search table{
+    table-layout:fixed;
+    word-wrap:break-word;
 }
 
 .searchleft{
