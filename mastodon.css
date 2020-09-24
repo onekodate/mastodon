@@ -219,6 +219,10 @@ b{
     font-weight:100;
 }
 
+.downloadbutton{
+    text-align:right;
+    margin-right:10px;
+}
 /* Ranking */
 .ranking{
     width:100%;
