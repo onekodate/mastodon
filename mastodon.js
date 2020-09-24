@@ -41,10 +41,11 @@ function loadPage(){
         timelabel[i]=(i-i%60)/60+":"+set2fig(i%60);
     }
     timelabel.push('24:00');
-    var boost_counter=0, private_counter=0, unlisted_counter=0, direct_counter=0, public_counter=0;
+    var counter=[0,0,0,0,0];
 
 /* Reading outbox_json */
-    for(cont of outbox_json["orderedItems"]){
+    for(let i=0;i<outbox_json["orderedItems"].length;i++){
+        const cont=outbox_json["orderedItems"][i];
         let date=new Date(cont['published']);
         const timenum = date.getHours()*60+date.getMinutes();
         timecount[timenum]++;
@@ -53,42 +54,47 @@ function loadPage(){
             datetime.y=timenum; 
             datetimelist.push(datetime);
         timelist.push(set2fig(date.getHours())+":00-"+set2fig(date.getHours()+1)+":00");
-        const time=set2fig(date.getHours())+":"+set2fig(date.getMinutes())+":"+set2fig(date.getSeconds())+":"+date.getMilliseconds();
+        let time=set2fig(date.getHours())+":"+set2fig(date.getMinutes())+":"+set2fig(date.getSeconds());
         date = date.getFullYear()+"-"+set2fig(date.getMonth()+1)+"-"+set2fig(date.getDate());
             datelist.push(date);
             if(!datecount[date]) datecount[date]=0;
                 datecount[date]++;
 
         if(cont['type']==='Announce'){
+            if(boosts[date+" "+time]) time+=":"+i%10;
             boosts[date+" "+time]=[cont['cc'][0], cont['object']];
-            boost_counter++;
+            counter[4]++;
         }else{
+            if(posts[date+" "+time]) time+=":"+i%10;
             posts[date+" "+time]=cont['object']['content'].replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
-            if(cont['object']['inReplyTo']) replies[date+" "+time]=cont['object']['inReplyTo'];
+            if(cont['object']['inReplyTo']){
+                if(replies[date+" "+time]) time+=":"+i%10;
+                replies[date+" "+time]=cont['object']['inReplyTo'];
+            }
             if(cont['cc'].length===0){
                 if(cont['to'].length!==0){
-                if(cont['to'][0].indexOf('followers')===-1) direct_counter++;
-                else private_counter++;
+                if(cont['to'][0].indexOf('followers')===-1) counter[3]++;
+                else counter[2]++;
                 }
-            }else if(cont['to'].includes("https://www.w3.org/ns/activitystreams#Public")) public_counter++;
-            else unlisted_counter++;
+            }else if(cont['to'].includes("https://www.w3.org/ns/activitystreams#Public")) counter[0]++;
+            else counter[1]++;
         }
     }
     
 /* Summary */
-    elemid("sumpostcounter").innerText=public_counter+unlisted_counter+private_counter+direct_counter;    
-    elemid("publiccounter").innerText=public_counter;
-    elemid("unlistedcounter").innerText=unlisted_counter;
-    elemid("privatecounter").innerText=private_counter;
-    elemid("directcounter").innerText=direct_counter;
-    elemid("boostcounter").innerText=boost_counter;
+    elemid("sumpostcounter").innerText=Object.keys(posts).length;    
+    elemid("publiccounter").innerText=counter[0];
+    elemid("unlistedcounter").innerText=counter[1];
+    elemid("privatecounter").innerText=counter[2];
+    elemid("directcounter").innerText=counter[3];
+    elemid("boostcounter").innerText=counter[4];
     elemid("replycounter").innerText=Object.keys(replies).length;
     elemid("favcounter").innerText=likes_json['totalItems'];
     var myChart = new Chart(elemid("circle"),{
         type:'doughnut',
         data:{
             datasets:[{
-                data:[public_counter, unlisted_counter, private_counter, direct_counter, boost_counter],
+                data:counter,
                 backgroundColor:["#ffffff","#d9e1e8","#9baec8","#191b22","#000000"],
                 borderWidth:1,
             }],
@@ -131,12 +137,14 @@ function loadPage(){
         dc.y=datecount[key];
         dcs.push(dc);
     }
+    datelist.sort();
     const dateinit = new Date(datelist[0]);
     const datelast = new Date(datelist[datelist.length-1]);
     const wholedays = Math.ceil((datelast-dateinit)/60/60/24/1000);
     elemid("wholedays").innerText=wholedays;
     elemid("daten").innerText=dcs.length;
     elemid("uprate").innerText=Math.round(dcs.length/wholedays*1000)/10;
+    elemid("init").innerText=datelist[0];
     elemid("aver").innerText=Math.round(Object.keys(posts).length/dcs.length);
     elemid("daterank").innerHTML = ranksort(datelist,5);
     elemid("timerank").innerHTML = ranksort(timelist,5);
@@ -252,11 +260,11 @@ function ranksort(replyto,n){
     }
     for(let i=0;i<n;i++){
         let t=counterlist.indexOf(Math.max.apply(null,counterlist));
-        replyrank.push('<tr><th>');
+        replyrank.push('<tr><th class="rankleft">');
         replyrank.push(i+1+".");
         replyrank.push('</th><th>');
         replyrank.push(namelist[t]);
-        replyrank.push('</th><th class="right">');
+        replyrank.push('</th><th class="rankright">');
         replyrank.push(counterlist[t]);
         replyrank.push(' times');
         replyrank.push('</th></tr>');
@@ -298,6 +306,17 @@ function loadSearch(){
         }
         request=elemid("reply").value+" from reply user.";
         elemid("reply").value="";
+    }else if(elemid("date").value){
+        for(key in posts){
+            if(key.indexOf(elemid("date").value)!==-1) list[key]=posts[key];
+        }
+        for(key in boosts){
+            if(key.indexOf(elemid("date").value)!==-1){
+                list[key]='<a target="_blank" href='+boosts[key][1]+">"+boosts[key][1]+"</a>";
+            }
+        }
+        request="toots in "+elemid("date").value;
+        elemid("date").value="";
     }else error("You don't input a word.");
 
     if(request&&Object.keys(list).length===0){
