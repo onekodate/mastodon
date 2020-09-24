@@ -77,7 +77,7 @@
             <div id="readmore2" class="invisible">            
                 <div class ="figure">
                     <p>
-                        You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%) and <b id="aver"></b> times per day.
+                        You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%), since <b id="init"></b> and <b id="aver"></b> times per day.
                     </p>
                     <p><canvas id = "dateplot" style="position:relative; width:80%"></canvas></p>
                     <p>You tooted most...</p>
@@ -123,9 +123,10 @@
             <div id="readmore4" class="invisible">                     
                 <div class=search>
                     <div class=searchbox>
-                        <div class=word><input placeholder="Word" class=text type=text id=word></div>
-                        <div class=boost><input placeholder="Boost From" class=text type=text id=boost></div>
-                        <div class=reply><input placeholder="Reply To" class=text type=text id=reply></div>
+                        <div><input placeholder="Word" class=text type=text id=word></div>
+                        <div><input placeholder="Boost From" class=text type=text id=boost></div>
+                        <div><input placeholder="Reply To" class=text type=text id=reply></div>
+                        <div><input placeholder="YYYY-MM-DD hh:mm:ss" class=text type=text id=date></div>
                     </div>
                     <input class=submit type=submit value=Search onclick="loadSearch();"><br>
                     <b id=searchcontent></b><br>
