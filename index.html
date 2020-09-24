@@ -80,12 +80,23 @@
                         You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%), since <b id="init"></b> and <b id="aver"></b> times per day.
                     </p>
                     <p><canvas id = "dateplot" style="position:relative; width:80%"></canvas></p>
+                    <p class="downloadbutton">
+                        <a href="#dateplot" onclick="downLoad(this);">Download </a>
+                        <a id="downloadlink"></a>
+                    </p>
+                    
                     <p>You tooted most...</p>
                     <b id="daterank"></b>
                     <p><canvas id = "timeplot" style="position:relative; height:100; width:90%"></canvas></p>
+                    <p class="downloadbutton">
+                        <a href="#timeplot" onclick="downLoad(this);">Download </a>
+                    </p>
                     <p>You toot most...</p>
                     <b id="timerank"></b>
                     <p><canvas id = "datetimescatter" style="position:relative; width:80%"></canvas></p>
+                    <p class="downloadbutton">
+                        <a href="#datetimescatter" onclick="downLoad(this);">Download </a>
+                    </p>
                 </div>
                 <p class="readlessbutton">
                     <a href="#readmore2" onclick="openclose(this);">Close</a>
