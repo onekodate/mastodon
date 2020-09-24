@@ -30,6 +30,14 @@ function set2fig(num){
     return ret
 }
 
+    Chart.plugins.register({
+    beforeDraw: function(c){
+        var ctx = c.chart.ctx;
+        ctx.fillStyle = "#313543";
+        ctx.fillRect(0, 0, c.chart.width, c.chart.height);
+    }
+});
+
 var posts={}, boosts={}, replies={};
 function loadPage(){
     loading(1)
@@ -148,17 +156,19 @@ function loadPage(){
     elemid("aver").innerText=Math.round(Object.keys(posts).length/dcs.length);
     elemid("daterank").innerHTML = ranksort(datelist,5);
     elemid("timerank").innerHTML = ranksort(timelist,5);
-    
+
     var myChart = new Chart(elemid("dateplot"),{
         type:'bar',
         data: {
             datasets: [{
                 label:'post',
+                fontColor:"#ffffff",
                 data:dcs,
                 backgroundColor:"#f0fff0",            
             }]
         },
         options:{
+            legend:{labels:{fontColor:'#ffffff'}},
             scales:{
                 xAxes:[{
                     type:'time',
@@ -187,12 +197,14 @@ function loadPage(){
             }]
         },
         options:{
+            legend:{labels:{fontColor:'#ffffff'}},
             scales:{
                 xAxes:[{
                     gridLines:{color:"#9baec8",},
                     ticks: {
                         maxTicksLimit:24,
-                        maxRotation:0,
+                        min:0,
+                        max:1441,
                         fontColor:"#ffffff",
                     },
                 }],
@@ -216,6 +228,7 @@ function loadPage(){
             }]
         },
         options:{
+            legend:{labels:{fontColor:'#ffffff'}},
             scales:{
                 xAxes:[{
                     type:'time',
@@ -244,6 +257,17 @@ function loadPage(){
     elemid("load").className="invisible";
     elemid("main").className="";
     loading(0)
+}
+
+function downLoad(btn){
+    const btnId =  btn.getAttribute("href");  
+    const targetId = btnId.slice(1);
+    canvas=elemid(targetId);
+    downloadLink=elemid("downloadlink");
+    downloadLink.href=canvas.toDataURL('image/png');
+    downloadLink.download=targetId+".png"
+    downloadLink.click();
+    return false;
 }
 
 function ranksort(replyto,n){
