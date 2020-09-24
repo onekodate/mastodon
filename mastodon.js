@@ -60,7 +60,7 @@ function loadPage(){
                 datecount[date]++;
 
         if(cont['type']==='Announce'){
-            boosts[date+" "+time]=cont['object'];
+            boosts[date+" "+time]=[cont['cc'][0], cont['object']];
             boost_counter++;
         }else{
             posts[date+" "+time]=cont['object']['content'].replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
@@ -109,9 +109,9 @@ function loadPage(){
     var boostuser=[];
     for(key in boosts){
         var boost=boosts[key];
-        if(boost.indexOf('users')!==-1&&boost.indexOf('statuses')!==-1){
-            boostuser.push(boost.substring(boost.indexOf('users')+6,boost.indexOf('statuses')-1));
-        }
+        if(boost[0].indexOf('user')===-1) ;
+        else if(boost[1].indexOf('notes')!==-1) boostuser.push('<a target="_blank" href='+boost[0]+">"+boost[0].substring(boost[0].lastIndexOf('/')+1,)+"</a>");    
+        else boostuser.push(boost[0].substring(boost[0].lastIndexOf('/')+1,));
     }
     var favuser=[];
     for(like of likes_json['orderedItems']){
@@ -280,17 +280,17 @@ function loadSearch(){
         elemid("word").value="";
     }else if(elemid("boost").value){
         for(key in boosts){
-            if(boosts[key].indexOf(elemid("boost").value)!==-1){
-                list[key]='<a target="_blank" href='+boosts[key]+">"+boosts[key]+"</a>";
+            if(boosts[key][0].indexOf(elemid("boost").value)!==-1){
+                list[key]='<a target="_blank" href='+boosts[key][1]+">"+boosts[key][1]+"</a>";
             }
         }
         request=elemid("boost").value+" from boosted user.";
         elemid("boost").value="";
     }else if(elemid("reply").value){
         var replylist={};
-        for(key in replies){
-            if(replies[key].indexOf(elemid("reply").value)!==-1){
-                replylist[replies[key].substr(replies[key].indexOf('statuses')+9,5)]=key;
+        for(key in posts){
+            if(posts[key].indexOf(elemid("reply").value)!==-1&&replies[key]){
+                replylist[replies[key].substr(replies[key].lastIndexOf('/')+1,4)]=key;
             }
         }
         for(key in replylist){
@@ -299,16 +299,17 @@ function loadSearch(){
         request=elemid("reply").value+" from reply user.";
         elemid("reply").value="";
     }else error("You don't input a word.");
-    
+
     if(request&&Object.keys(list).length===0){
         elemid("searchcontent").innerText="No toot was found for your request: "+request;
         elemid("searchresult").innerText="";
     }else if(request){
         var resulttable=['<table>'];
-        for(key in list){
-            resulttable.push('<tr><th class="short">');
+        var keys=Object.keys(list).sort().reverse()
+        for(key of keys){
+            resulttable.push('<tr><th class="searchleft">');
             resulttable.push(key.substr(0,19));
-            resulttable.push('</th><th>');
+            resulttable.push('</th><th class="searchright">');
             resulttable.push(list[key]);
             resulttable.push('</th></tr>');   
         }
