@@ -1,4 +1,13 @@
 var outbox_json, likes_json;
+const DATA_URL = './test.json';
+fetch(DATA_URL)
+ .then(function(response){
+  return response.json();
+ })
+ .then(function(jsonData){
+  // JSONデータを扱った処理など
+  console.log(jsonData);
+ });
 
 function elemid(id){
     return document.getElementById(id);
