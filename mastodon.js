@@ -322,7 +322,7 @@ function loadSearch(){
         var replylist={};
         for(key in posts){
             if(posts[key].indexOf(elemid("reply").value)!==-1&&replies[key]){
-                replylist[replies[key].substr(replies[key].lastIndexOf('/')+1,4)]=key;
+                replylist[replies[key].substr(replies[key].lastIndexOf('/')+1,5)]=key;
             }
         }
         for(key in replylist){
