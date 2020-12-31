@@ -854,7 +854,7 @@ function showRanking(){
                 num+=y;
             }
             datasets.push({
-                label:"onekodate".repeat(Math.ceil(account_key.length/"onekodate".length)).substring(0,account_key.length), //account_key
+                label:account_key,
                 fontColor:"#ffffff",
                 data:data,
                 num:num,
