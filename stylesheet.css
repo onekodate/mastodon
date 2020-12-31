@@ -354,7 +354,6 @@ b{
 
 #search table{
     table-layout:fixed;
-    word-wrap:break-word;
 }
 
 .searchleft{
@@ -363,6 +362,7 @@ b{
 
 .searchright{
     text-align:left;
+    word-break:break-word;
 }
 
 .manager{
