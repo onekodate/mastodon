@@ -3,165 +3,271 @@
     <head>
         <meta charset=utf-8>
         <title>Mastodon Archive Viewer</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
-        <link rel="stylesheet" href="mastodon.css">
+        <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+        <link href="https://cdn.bootcss.com/noUiSlider/8.5.1/nouislider.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcss.com/noUiSlider/8.5.1/nouislider.js"></script>
+        <link rel=stylesheet href="stylesheet.css">
     </head>
     <body>
-        <div class="progress invisible" id="progress">
-            <div class="indeterminate"></div>
+        <div class="progress invisible" id=progress>
+            <div class=indeterminate></div>
         </div>
-        <div class="header">
-            <div class="row container" id="error-box" style="display: none;">
-                <div class="card-panel">
-                    <button onclick='document.getElementById("error-box").style.display = "none"'>×</button>
-                    <span>Error: <span id="error-text"></span></span>
+        <div class=header>
+            <p id=dropArea class="">ここにoutbox.jsonとlikes.jsonをドロップしてください。<br>または</p>
+            <div class="row container" id=error-box style="display:none;">
+                <div class=card-panel>
+                    <button onclick='elem("error-box").style.display="none"'>×</button>
+                    <span>Error:<span id=error-text></span></span>
                 </div>
-            </div>    
-            <p id="dropArea" class="">ここにoutbox.jsonとlikes.jsonをドロップしてください<br>または</p>       
+            </div>
         </div>
-        <div id="load" class="">
-            <h1>Welcome to Mastodon Archive Viewer</h1>
-            <div id="upFileWrap">
-                <div id="inputFile">
-                    <div id="inputFileWrap">
-                        <input type="file" name="uploadFile" id="uploadFile" multiple="multiple" accept=".json">
-                        <div id="btnInputFile"><span>ファイルを選択する</span></div>
+        <div id=load class="">
+            <p>Welcome to Mastodon Archive Viewer</p>
+            <div id=chooseFile>
+                <input type=file id=uploadFile multiple=multiple accept=".json">
+                <div id=btnInputFile>
+                    <span>ファイルを選択する</span>
+                </div>
+            </div>
+            <div id=chooseAccount>
+                <span id=choose_account></span>
+            </div>
+            <div class=darklight>
+                <div id=ob_cap class=dark>Outbox</div><div id=lk_cap class=dark>Likes</div><div id=ac_cap class=invisible>Account</div>
+            </div>
+            <button class=invisible id=loadButton onclick="loadPage();">Load</button>
+        </div>
+        <div id=main class="invisible">
+            <div class="contentbox invisible">
+                <button class=open href="#account" onclick="openclose(this);">Account</button>
+                <div id=account class="">
+                    <div class=content>
+                        <p id=avatar></p>
+                        <p><span id=display></span>@<span id=acct></span></p>
+                        <p id=note></p>
+                        <p>Since: <span id=created></span> Last: <span id=last></span></p>
+                        <p>Toots:<span id=numstatuses></span>, Followees:<span id=numfollowing></span>, Followers:<span id=numfollower></span></p>                       
+                        <p class=close>
+                            <a href="#account" onclick="openclose(this);">Close</a>
+                        </p>
                     </div>
                 </div>
             </div>
-        </div>        
-        <div id="main" class="invisible">
-            <div class="result">
-            <button class="opclbutton" href="#readmore1" onclick="openclose(this);">Summary</button>                       
-            <div id="readmore1" class="">
+            <div class=contentbox>
+                <button class=open href="#summary" onclick="openclose(this);">Summary</button>
+                <div id=summary class="">
+                    <div class=content>
+                        <p>Got <span id=db_count></span> toots, since <span id=db_since></span> until <span id=db_until></span></p>
+                        <p id=api_info class=invisible>(Got <span id=api_count></span> toots, since <span id=api_since></span> until <span id=api_until></span>, via API)</p>
+                        <div class=dateSelect>
+                            <div id="summary-slider"></div>
+                            <p>
+                                <input class=txtbox type=text placeholder=YYYY-MM-DD id=summary_since onChange='dateParser("summary");showSummary();'>--
+                                <input class=txtbox type=text placeholder=YYYY-MM-DD id=summary_until onChange='dateParser("summary");showSummary();'>
+                                <span>  </span>
+                                <button class="date_selector invisible" href="#apism" onclick="setAPI();">API Full</button>
+                                <button class=date_selector onclick="slider.summary.noUiSlider.set([0,100]);">Full</button>
+                            </p>
+                        </div>
+                        <div class=dateSummary>
+                            <p>You used Mastodon <span id=up_count></span>/<span id=days_count></span> days (<span id=up_ratio></span>%), and toot <span id=tpd></span> times per day.</p>
+                            <p>
+                                <canvas id=visibility_pie style="position:relative; height:70;"></canvas>
+                                <canvas class=invisible id=app_pie style="position:relative; height:70;"></canvas>    
+                            </p>
+                            <p><span id=public_ratio></span>% in Public, <span id=unlisted_ratio></span>% in Unlisted, <span id=private_ratio></span>% in Private, <span id=direct_ratio></span>% in Direct, <span id=boost_ratio></span>% in Boost.</p>
+                            <p id=app_ratio class=invisible></p>
+                            <p>Toot:<span id=posts_count></span> times, Reply:<span id=reply_count></span> times, Boost:<span id=boost_count></span> times.
+                            <p>Favourite:<span id=fav_count></span></p>
+                            <p id=api_ed class=invisible>Boosted:<span id=boosted_count></span>, Favourited:<span id=faved_count></span></p>
+                        </div>
+                        <div class="dateRanking invisible">
+                            <div class=summaryTopRow>
+                                <div class=rankbox>
+                                    <p>Post</p>
+                                    <b id=post_date_rank></b>
+                                </div><br>    
+                                <div class=rankbox>
+                                    <p>Boost</p>
+                                    <b id=boost_date_rank></b>
+                                </div><br>                         
+                                <div class=rankbox>
+                                    <p>Reply</p>
+                                    <b id=reply_date_rank></b>
+                                </div><br>                         
+                            </div>
+                            <div id=summaryLowerRow class=invisible>
+                                <div class=rankbox>
+                                    <p>Favourite</p>
+                                    <b id=fav_date_rank></b>
+                                </div>
+                                <div class=rankbox>
+                                    <p>Most Boosted</p>
+                                    <b id=boosted_date_rank></b>
+                                </div>                             
+                                <div class=rankbox>
+                                    <p>Most Favourited</p>
+                                    <b id=faved_date_rank></b>
+                                </div>
+                            </div> 
+                        </div>                            
+                        <p class=close>
+                            <a href="#summary" onclick="openclose(this);">Close</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class=contentbox>
+                <button class=open href="#figure" onclick="openclose(this);">Figure</button>
+                <div id=figure class=invisible>
+                    <div class=content>
+                        <div class=dateSelect>
+                            <div id="figure-slider"></div>
+                            <p>
+                                <input class=txtbox type=text placeholder=YYYY-MM-DD id=figure_since onChange='dateParser("figure");showFigure(true,false,false);'>--
+                                <input class=txtbox type=text placeholder=YYYY-MM-DD id=figure_until onChange='dateParser("figure");showFigure(true,false,false);'>
+                                <span>  </span>
+                                <button class="date_selector invisible" href="#apism" onclick="setAPI();">API Full</button>
+                                <button class=date_selector onclick="slider.figure.noUiSlider.set([0,100]);showFigure(true,false,false);">Full</button>
+                            </p>
+                            <p>
+                                <button class=date_selector onclick="figure_tick[0]=10;showFigure(false,true,false);">Day</button>
+                                <button class=date_selector onclick="figure_tick[0]=7;showFigure(false,true,false);">Month</button>                          
+                            </p>
+                        </div>
+                        <p><canvas id=datebar style="position:relative; width:80%"></canvas></p>
+                        <p class=download><a href="#datebar" onclick="canvas2png(this);">Download</a></p>
+                        <p>
+                            <button class=date_selector onclick="figure_tick[1]=16;showFigure(false,false,true);">1 Minute</button>
+                            <button class=date_selector onclick="figure_tick[1]=15;showFigure(false,false,true);">10 Mnts</button>
+                            <button class=date_selector onclick="figure_tick[1]=13;showFigure(false,false,true);">1 Hour</button>                                    
+                        </p>
+                        <p><canvas id=timebar style="position:relative; width:80%"></canvas></p>
+                        <p class=download><a href="#timebar" onclick="canvas2png(this);">Download</a></p>                            
+                        <p><canvas id=scatter style="position:relative; width:80%"></canvas></p>
+                        <p class=download><a href="#scatter" onclick="canvas2png(this);">Download</a></p>
+                        <p class=close>
+                            <a href="#figure" onclick="openclose(this);">Close</a>
+                        </p>
+                    </div>
+                </div>
+            </div>               
+            
+            <div class=contentbox>
+                <button class=open href="#ranking" onclick="openclose(this);">Ranking</button>
+                <div id=ranking class=invisible>
+                    <div class=dateSelect>
+                        <div id="ranking-slider"></div>
+                        <p>
+                            <input class=txtbox type=text placeholder=YYYY-MM-DD id=ranking_since onChange='dateParser("ranking");'>--
+                            <input class=txtbox type=text placeholder=YYYY-MM-DD id=ranking_until onChange='dateParser("ranking");'>
+                            <span>  </span>
+                            <button class="date_selector invisible" href="#apism" onclick="setAPI();">API Full</button>
+                            <button class=date_selector onclick="slider.ranking.noUiSlider.set([0,100]);showRanking();">Full</button>
+                        </p>
+                        <div id="ranking-tick-slider"></div>
+                    </div>
+                    <div class=content>
+                        <div class=rankingTopRow>
+                            <p>Mentions</p>
+                            <p><canvas id=mentions style="position:relative; width:80%"></canvas></p>
+                            <p class=download><a href="#mentions" onclick="canvas2png(this);">Download</a></p>         
+                            <p>Reblog</p>
+                            <p><canvas id=reblog style="position:relative; width:80%;"></canvas></p>
+                            <p class=download><a href="#reblog" onclick="canvas2png(this);">Download</a></p>         
+                            <p>Favourite</p>
+                            <p><canvas id=favacct style="position:relative; width:80%;"></canvas></p>     
+                            <p class=download><a href="#favacct" onclick="canvas2png(this);">Download</a></p>              
+                        </div>
+                        <div id=rankingLowerRow class=invisible>
+                            <p><canvas id=faved style="position:relative; width:80%"></canvas></p>
+                            <p><canvas id=bsted style="position:relative; width:80%;"></canvas></p>
+                        </div> 
+                    </div>                                            
+                    <p class=close>
+                        <a href="#ranking" onclick="openclose(this);">Close</a>
+                    </p>
+                </div>
+            </div>
 
-                <div class="summary">
-                    <div class="figure">
-                        <p><canvas id="circle" style="position:relative; height:70;"></canvas></p>
-                    </div>
-                    <div class="post">
-                        <p>You have posted <b id="sumpostcounter"></b> times.</p>
-                        <table>
-                            <tr>
-                                <td class="right"><b id="publiccounter"></b></td>
-                                <td>  times in public</td>
-                            </tr>
-                            <tr>
-                                <td class="right"><b id="unlistedcounter"></b></td>
-                                <td>  times in unlisted</td>
-                            </tr>
-                            <tr>
-                                <td class="right"><b id="privatecounter"></b></td>
-                                <td>  times in private</td>
-                            </tr>
-                            <tr>
-                                <td class="right"><b id="directcounter"></b></td>
-                                <td>  times in direct</td>
-                            </tr>
-                        </table>
-                    </div>                
-                    <div class="others">
-                        <p>You have boosted <b id="boostcounter"></b> toots.</p>
-                        <p>You have replied <b id="replycounter"></b> times.</p>
-                        <p>You have favourited <b id="favcounter"></b> times.</p>
+            <div class=contentbox>
+                <button class=open href="#search" onclick="openclose(this);">Search</button>
+                <div id=search class=invisible>
+                    <div class=content>
+                        <div class=searchbox>
+                            <div><input placeholder="Word" type=text id=word onChange="loadSearch();"></div>
+                            <div><input placeholder="YYYY-MM-DD" type=text id=date onChange="loadSearch();"></div>
+                            <div><input placeholder="Reply To" type=text id=reply onChange="loadSearch();"></div>
+                            <div><input placeholder="Boost From" type=text id=boost onChange="loadSearch();"></div>
+                            <div id=fav_sch class=invisible><input placeholder="Favourite" type=text id=fv_search onChange="loadSearch();"></div>
+                        </div>
+                        <p id=request></p>
+                        <b id=result></b>
+                        <p class=close>
+                            <a href="#search" onclick="openclose(this);">Close</a>
+                        </p>
                     </div>
                 </div>
-                <p class="readlessbutton">
-                    <a href="#readmore1" onclick="openclose(this);">Close</a>
-                </p>
-            </div>
-            </div>
-            
-            <div class="result">
-            <button class="opclbutton" href="#readmore2" onclick="openclose(this);">Figure</button>  
-            <div id="readmore2" class="invisible">            
-                <div class ="figure">
-                    <p>
-                        You toot <b id="daten"></b>/<b id="wholedays"></b> days(<b id="uprate"></b>%), since <b id="init"></b> and <b id="aver"></b> times per day.
-                    </p>
-                    <p><canvas id = "dateplot" style="position:relative; width:80%"></canvas></p>
-                    <p class="downloadbutton">
-                        <a href="#dateplot" onclick="downLoad(this);">Download </a>
-                        <a id="downloadlink"></a>
-                    </p>
-                    
-                    <p>You tooted most...</p>
-                    <b id="daterank"></b>
-                    <p><canvas id = "timeplot" style="position:relative; height:100; width:90%"></canvas></p>
-                    <p class="downloadbutton">
-                        <a href="#timeplot" onclick="downLoad(this);">Download </a>
-                    </p>
-                    <p>You toot most...</p>
-                    <b id="timerank"></b>
-                    <p><canvas id = "datetimescatter" style="position:relative; width:80%"></canvas></p>
-                    <p class="downloadbutton">
-                        <a href="#datetimescatter" onclick="downLoad(this);">Download </a>
+            </div> 
+            <div class="contentbox invisible">
+                <button class=open href="#manager" onclick="openclose(this);">Data Manager</button>
+                <div id=manager class=invisible>
+                    <div class=content>
+                        <div class=datacontent>
+                            <div class=left>
+                                <p>データを上書き保存します。既に登録されているデータ名を入力するとそのデータを上書きします。APIで取得したデータは毎回自動的に保存されます。このボタンはJSONファイルの登録のために使用してください。</p>
+                                <b id=datanamelist></b>
+                                <input type=text id=dataname> 
+                            </div>
+                            <div class=right><button class=manager>Save Data</button></div>
+                        </div>
+                        <div class=datacontent>
+                            <div class=left>
+                                <p>データを追加できるようにします。最初の画面に戻るので追加するデータを読み込んで、改めて保存しなおしてください。</p>
+                            </div>
+                            <div class=right><button class=manager>Add Data</button></div>
+                        </div>                    
+                        <div class=datacontent>
+                            <div class=left>
+                                <p>データをまたこのサイトで使えるjsonファイルとしてダウンロードします。</p>
+                            </div>
+                            <div class=right><button class=manager>Download Data</button></div>
+                        </div>
+                        <div class=datacontent>
+                            <div class=left>
+                                <p>データベースを削除します。削除する前にデータをダウンロードすることをおすすめします。</p>
+                            </div>
+                            <div class=right><button class=manager>Clear Data</button></div>
+                        </div>                            
+                    </div>
+                    <p class=close>
+                        <a href="#manager" onclick="openclose(this);">Close</a>
                     </p>
                 </div>
-                <p class="readlessbutton">
-                    <a href="#readmore2" onclick="openclose(this);">Close</a>
-                </p>
-            </div>  
-            </div>
-            
-            <div class="result">          
-            <button class="opclbutton" href="#readmore3" onclick="openclose(this);">Ranking</button>  
-            <div id="readmore3" class="invisible">                   
-                <div class="ranking">
-                    <div class="mention">
-                        <p>You have mentioned to...</p>
-                        <b id="replyrank"></b>
-                    </div>
-                    
-                    <div class="boost">
-                        <p>You have boosted from...</p>
-                        <b id="boostrank"></b>
-                    </div>
-                    
-                    <div class="fav">
-                        <p>You have favourited toots of...</p>
-                        <b id="favrank"></b>
-                    </div>
-                </div>
-                <p class="readlessbutton">
-                    <a href="#readmore3" onclick="openclose(this);">Close</a>
-                </p>
-            </div>
-            </div>
-            
-            <div class="result">   
-            <button class="opclbutton" href="#readmore4" onclick="openclose(this);">Search</button>  
-            <div id="readmore4" class="invisible">                     
-                <div class=search>
-                    <div class=searchbox>
-                        <div><input placeholder="Word" class=text type=text id=word></div>
-                        <div><input placeholder="Boost From" class=text type=text id=boost></div>
-                        <div><input placeholder="Reply To" class=text type=text id=reply></div>
-                        <div><input placeholder="YYYY-MM-DD hh:mm:ss" class=text type=text id=date></div>
-                    </div>
-                    <input class=submit type=submit value=Search onclick="loadSearch();"><br>
-                    <b id=searchcontent></b><br>
-                    <b id=searchresult></b>
-                </div>
-                <p class="readlessbutton">
-                    <a href="#readmore4" onclick="openclose(this);">Close</a>
-                </p>
-            </div>
             </div>
         </div>
-        <div class="footer">
-            <div class="foot">
-                <h2>全てJavaScriptで処理されているため、サーバーにデータは保存されません。</h2>
-                <h2>ページを更新するとファイル選択画面に戻ります<br>ファイルを間違えた場合はページを更新してください。</h2>
-                <a target="_blank" href="https://github.com/onekodate/mastodon">ソースコード</a><br>
-                開発者:<a target="_blank" href="https://mstdn.beer/web/accounts/80060">@onekodate@mstdn.beer</a><br>
-                <h2>JavascriptでMastodonのアーカイブを可視化するアイデアとソースコードの多くはnzwsさんによるものです。<a target="_blank" href="https://github.com/yuzulabo/Mastodon-Archive-Viewer">nzwsさんによるMastodon-Archive-Viewer</a></h2>
+        <a id="downloadLink"></a>
+        <div class=footer>
+            <div class=content>
+                <p>全てJavaScriptで処理されているため、サーバーにデータは保存されません。</p>
+                <p class=invisible>クライアントサイドでブラウザに付属したデータベースを利用することが可能で、<br>その場合は再アクセス後自動的にデータを読み込みます。そのデータの管理はData Managerから行ってください。</p>
+                <p>ページを更新するとファイル選択画面に戻ります。ファイルを間違えた場合はページを更新してください。</p>
+                <p>不具合、要望等ありましたらお気軽にご連絡ください。</p>     
+                <p>ソースコード:<a target="_blank" href="https://github.com/onekodate/mastodon">Github</a>　
+                    開発者:<a target="_blank" href="https://mstdn.beer/web/accounts/80060">@onekodate@mstdn.beer</a></p>
+                <p>参考文献<br>
+                    <a target="_blank" href="https://github.com/yuzulabo/Mastodon-Archive-Viewer">nzwsさんによるMastodon-Archive-Viewer</a><br>
+                    <a target="_blank" href="https://github.com/takahashim/mastodon-access-token">takahashimさんによるAccess Token Generator for Mastodon API</a><br>
+                    <a target="_blank" href="https://github.com/Kirschn/mastodon.js">Kirschnさんによるmastodon.js</a>
+                </p>                    
             </div>
         </div>
         <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
-        <script src="mastodon.js"></script>
-
+        <script src="mastodon-api.js"></script>
+        <script src="script.js"></script>
     </body>
 </html>
+                                             
