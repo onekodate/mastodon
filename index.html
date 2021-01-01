@@ -8,7 +8,7 @@
         <script src="https://cdn.bootcss.com/noUiSlider/8.5.1/nouislider.js"></script>
         <link rel=stylesheet href="stylesheet.css">
     </head>
-    <body>
+    <body onload="getSample();">
         <div class="progress invisible" id=progress>
             <div class=indeterminate></div>
         </div>
@@ -78,8 +78,8 @@
                             <p><span id=public_ratio></span>% in Public, <span id=unlisted_ratio></span>% in Unlisted, <span id=private_ratio></span>% in Private, <span id=direct_ratio></span>% in Direct, <span id=boost_ratio></span>% in Boost.</p>
                             <p id=app_ratio class=invisible></p>
                             <p>Toot:<span id=posts_count></span> times, Reply:<span id=reply_count></span> times, Boost:<span id=boost_count></span> times.
-                            <p>Favourite:<span id=fav_count></span></p>
-                            <p id=api_ed class=invisible>Boosted:<span id=boosted_count></span>, Favourited:<span id=faved_count></span></p>
+                            <p>Favourite:<span id=like_count></span></p>
+                            <p id=api_ed class=invisible>Boosted:<span id=boosted_count></span>, Favourited:<span id=liked_count></span></p>
                         </div>
                         <div class="dateRanking invisible">
                             <div class=summaryTopRow>
@@ -99,7 +99,7 @@
                             <div id=summaryLowerRow class=invisible>
                                 <div class=rankbox>
                                     <p>Favourite</p>
-                                    <b id=fav_date_rank></b>
+                                    <b id=like_date_rank></b>
                                 </div>
                                 <div class=rankbox>
                                     <p>Most Boosted</p>
@@ -107,7 +107,7 @@
                                 </div>                             
                                 <div class=rankbox>
                                     <p>Most Favourited</p>
-                                    <b id=faved_date_rank></b>
+                                    <b id=liked_date_rank></b>
                                 </div>
                             </div> 
                         </div>                            
@@ -177,11 +177,11 @@
                             <p><canvas id=reblog style="position:relative; width:80%;"></canvas></p>
                             <p class=download><a href="#reblog" onclick="canvas2png(this);">Download</a></p>         
                             <p>Favourite</p>
-                            <p><canvas id=favacct style="position:relative; width:80%;"></canvas></p>     
-                            <p class=download><a href="#favacct" onclick="canvas2png(this);">Download</a></p>              
+                            <p><canvas id=likeacct style="position:relative; width:80%;"></canvas></p>     
+                            <p class=download><a href="#likeacct" onclick="canvas2png(this);">Download</a></p>              
                         </div>
                         <div id=rankingLowerRow class=invisible>
-                            <p><canvas id=faved style="position:relative; width:80%"></canvas></p>
+                            <p><canvas id=liked style="position:relative; width:80%"></canvas></p>
                             <p><canvas id=bsted style="position:relative; width:80%;"></canvas></p>
                         </div> 
                     </div>                                            
@@ -200,7 +200,7 @@
                             <div><input placeholder="YYYY-MM-DD" type=text id=date onChange="loadSearch();"></div>
                             <div><input placeholder="Reply To" type=text id=reply onChange="loadSearch();"></div>
                             <div><input placeholder="Boost From" type=text id=boost onChange="loadSearch();"></div>
-                            <div id=fav_sch class=invisible><input placeholder="Favourite" type=text id=fv_search onChange="loadSearch();"></div>
+                            <div id=like_sch class=invisible><input placeholder="Favourite" type=text id=fv_search onChange="loadSearch();"></div>
                         </div>
                         <p id=request></p>
                         <b id=result></b>
@@ -210,19 +210,19 @@
                     </div>
                 </div>
             </div> 
-            <div class="contentbox invisible">
+            <div id=managerDiv class="contentbox">
                 <button class=open href="#manager" onclick="openclose(this);">Data Manager</button>
                 <div id=manager class=invisible>
                     <div class=content>
-                        <div class=datacontent>
+                        <div id=createSample class=datacontent>
                             <div class=left>
-                                <p>データを上書き保存します。既に登録されているデータ名を入力するとそのデータを上書きします。APIで取得したデータは毎回自動的に保存されます。このボタンはJSONファイルの登録のために使用してください。</p>
+                                <p>データを上書き保存します。</p>
                                 <b id=datanamelist></b>
-                                <input type=text id=dataname> 
+                                <input type=text id=dataname class=invisible> 
                             </div>
-                            <div class=right><button class=manager>Save Data</button></div>
+                            <div class=right><button class=manager onclick="createSample();">Save Data</button></div>
                         </div>
-                        <div class=datacontent>
+                        <div class=invisible>
                             <div class=left>
                                 <p>データを追加できるようにします。最初の画面に戻るので追加するデータを読み込んで、改めて保存しなおしてください。</p>
                             </div>
@@ -232,13 +232,13 @@
                             <div class=left>
                                 <p>データをまたこのサイトで使えるjsonファイルとしてダウンロードします。</p>
                             </div>
-                            <div class=right><button class=manager>Download Data</button></div>
+                            <div class=right><button class=manager onclick="downloadJson();">Download Data</button></div>
                         </div>
-                        <div class=datacontent>
+                        <div id=deleteSample class=invisible>
                             <div class=left>
                                 <p>データベースを削除します。削除する前にデータをダウンロードすることをおすすめします。</p>
                             </div>
-                            <div class=right><button class=manager>Clear Data</button></div>
+                            <div class=right><button class=manager onclick="deleteSample();">Clear Data</button></div>
                         </div>                            
                     </div>
                     <p class=close>
@@ -251,9 +251,9 @@
         <div class=footer>
             <div class=content>
                 <p>全てJavaScriptで処理されているため、サーバーにデータは保存されません。</p>
-                <p class=invisible>クライアントサイドでブラウザに付属したデータベースを利用することが可能で、<br>その場合は再アクセス後自動的にデータを読み込みます。そのデータの管理はData Managerから行ってください。</p>
+                <p>クライアントサイドでブラウザに付属したデータベースを利用することが可能で、<br>その場合は再アクセス後自動的にデータを読み込みます。そのデータの管理はData Managerから行ってください。</p>
                 <p>ページを更新するとファイル選択画面に戻ります。ファイルを間違えた場合はページを更新してください。</p>
-                <p>不具合、要望等ありましたらお気軽にご連絡ください。</p>     
+                <p>Chromeのみで動作確認しています。不具合、要望等ありましたらお気軽にご連絡ください。</p>     
                 <p>ソースコード:<a target="_blank" href="https://github.com/onekodate/mastodon">Github</a>　
                     開発者:<a target="_blank" href="https://mstdn.beer/web/accounts/80060">@onekodate@mstdn.beer</a></p>
                 <p>参考文献<br>

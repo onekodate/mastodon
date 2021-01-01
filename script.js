@@ -1,15 +1,6 @@
 /* Declaration */
-var outbox_json,likes_json;
-var outbox_api,favour_api;
-var outbox={},favour={},account={},access={};
+var outbox_api,likes_api,account={};
 var api_since="",api_until="";
-var db_since="",db_until=""
-var summary_datetick=10, figure_tick=[8,15];
-var range={
-    summary:[0,0],
-    figure:[0,0],
-    ranking:[0,0],
-};
 
 Chart.plugins.register({
     beforeDraw: function(c){
@@ -44,12 +35,18 @@ function openclose(btn){
 
 function canvas2png(btn){
     const targetId=btn.getAttribute("href").slice(1);
-    canvas=elem(targetId);
+    const canvas=elem(targetId);
     downloadLink=elem("downloadLink");
     downloadLink.href=canvas.toDataURL("image/png");
     downloadLink.download=targetId+".png";
     downloadLink.click();
     return false;
+}
+
+function set2fig(num){
+    var ret=num;
+    if(num<10) ret="0"+num;
+    return String(ret);
 }
 
 const date2str=(date)=>{
@@ -62,15 +59,88 @@ function dateParser(car){
     return false;
 }
 
-/* Data Arrangement */
+/* Loading */
+var fileArea = elem('dropArea');
+
+fileArea.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    fileArea.classList.add('dragover');
+});
+
+fileArea.addEventListener('dragleave', (e)=>{
+    e.preventDefault();
+    fileArea.classList.remove('dragover');
+});
+
+fileArea.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    fileArea.classList.remove('dragover');
+    loadFile(e.dataTransfer.files);
+});
+
+elem('uploadFile').addEventListener('change', ()=>{
+    loadFile(elem('uploadFile').files);
+});
+
+var outbox_json,likes_json,access;
+function loadFile(files){
+    loading(1);
+    for(const file of files){
+        if(file.type==="application/json"){
+            var reader = new FileReader();
+            reader.onload=(event)=>{
+                elem("error-box").style.display="none"; 
+                const json=JSON.parse(event.target.result);
+                if(json.id==="outbox.json"){
+                    outbox_json=json;
+                    elem("ob_cap").className="";
+                }else if(json.id==="likes.json"){
+                    likes_json=json;
+                    elem("lk_cap").className="";
+                }else if(json.id==="account.json"){
+                    account=json;
+                    elem("ac_cap").className="";
+                }else if(json.id==="archive.json"){
+                    outbox=json.outbox;
+                    likes=json.likes;
+                    loadPage();
+                }else error("You chose wrong file.");
+                if(outbox_json&&likes_json&&account){
+                    loadPage();
+                    //elem("create").className="";
+                }else if(outbox_json&&likes_json){
+                    elem("loadButton").className="";
+                }else if(access) loadAPI();
+            };  
+            reader.readAsText(file);
+        }else error("You chose wrong file.");
+    }
+    loading(0);
+}
+
+function loadPage(){
+    if((!outbox||!likes)&&(outbox_json&&likes_json)) json2db();
+    elem("dropArea").className="invisible";
+    elem("load").className="invisible";
+    outbox2published();
+    showSummary();
+    showFigure(true,true,true);
+    showRanking();
+    elem("main").className="";
+    loading(0);
+}
+
+var outbox, likes;
 function json2db(){
-    let content=(val)=>{
+    outbox={};
+    likes={};
+    const content=(val)=>{
         let result="";
         if(val.type==="Announce") result=val.object;
         else result=val.object.content.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
         return result; 
     }
-    let visibility=(val)=>{
+    const visibility=(val)=>{
         let result="undefined";
         if(val.type==="Announce") result="boost";
         else{
@@ -84,7 +154,7 @@ function json2db(){
         }
         return result;
     }
-    let mentions=(val)=>{
+    const mentions=(val)=>{
         let result=[];
         if(val.object.tag){
             for(let tag of val.object.tag){
@@ -99,12 +169,12 @@ function json2db(){
         }
         return result;
     }
-    let reblog=(val)=>{
+    const reblog=(val)=>{
         let result="";
         if(val.type==="Announce") result=val.cc[0].substring(val.cc[0].lastIndexOf("/")+1);
         return result;
     }
-    let inReplyTo=(val)=>{
+    const inReplyTo=(val)=>{
         let result="";
         if(val.object.inReplyTo) result=val.object.inReplyTo;
         return result;
@@ -127,7 +197,7 @@ function json2db(){
             }
         }
     })
-    let likes=(val)=>{
+    const likeacct=(val)=>{
         let result="";
         if(val.indexOf("users")!==-1&&val.indexOf("statuses")!==-1){
             result=val.substring(val.indexOf("users")+6,val.indexOf("statuses")-1);
@@ -142,14 +212,15 @@ function json2db(){
         return result;
     }
     likes_json.orderedItems.forEach((val)=>{
-        if(!favour[val]){
-            favour[val]={
-                favacct:likes(val),
-            }
+        if(!likes[val]){
+            likes[val]={
+                likeacct:likeacct(val),
+            };
         }
-    })
+    });
 }
 
+/* API */
 function api2db(){
     outbox_api.forEach((val,idx)=>{
         if(outbox[val.created_at]){
@@ -162,31 +233,32 @@ function api2db(){
             mentions:val.mentions,
             reblog:val.reblog.name,
             app:val.app,
-            favourited:val.favourites_count,
+            liked:val.favourites_count,
             reblogged:val.reblogs_count,
         }
     })
-    favour_api.forEach((val)=>{
-        favour[val.url]={
-            favacct:val.account.username,
+    likes_api.forEach((val)=>{
+        likes[val.url]={
+            likeacct:val.account.username,
             content:val.content,
             created_at:val.created_at,
         }
     })
 }
 
+/* Data Arrangement */
 var published={
     app:{},
     visibility:{},
     mentions:{},
     reblogged:{},
-    favourited:{},
+    liked:{},
     posts:[],
     reblog:{},
-    favacct:{},
+    likeacct:{},
     replies:[],
 };
-
+var db_since="",db_until="";
 function outbox2published(){
     for(const outbox_key in outbox){
         const val=outbox[outbox_key];
@@ -206,10 +278,10 @@ function outbox2published(){
             }
         }
     }
-    for(const favour_key in favour){
-        if(favour[favour_key].created_at){
-            if(!published.favacct[favour[favour_key].favacct]) published.favacct[favour[favour_key].favacct]=[];
-            published.favacct[favour[favour_key].favacct].push(favour[favour_key].created_at);
+    for(const likes_key in likes){
+        if(likes[likes_key].created_at){
+            if(!published.likeacct[likes[likes_key].likeacct]) published.likeacct[likes[likes_key].likeacct]=[];
+            published.likeacct[likes[likes_key].likeacct].push(likes[likes_key].created_at);
         }
     }
     published.posts.sort();
@@ -226,15 +298,14 @@ function outbox2published(){
     }
 }
 
-const dateFormatter=(str,tick)=>{
-    let newstr=str.substring(0,tick);
-    if(newstr.length===9){
-        newstr=newstr+"1";
-    }
-    return newstr;
-}
-
 function published2date(since,until,datetick){
+    const dateFormatter=(str,tick)=>{
+        let newstr=str.substring(0,tick);
+        if(newstr.length===9){
+            newstr=newstr+"1";
+        }
+        return newstr;
+    }
     let dateCount={posts:{},replies:{}};
     for(const outbox_key of published.posts){
         let date=outbox_key.substring(0,10);
@@ -271,10 +342,14 @@ function published2date(since,until,datetick){
     return dateCount;
 }
 
-function set2fig(num){
-    var ret=num;
-    if(num<10) ret="0"+num;
-    return String(ret);
+const timeFormatter=(str)=>{
+    let newstr=str;
+    if(str.length===2){
+        newstr=str+":00-"+str+":59";
+    }else if(str.length===4){
+        newstr=str+"0-"+str+"9";
+    }
+    return newstr;
 }
 
 const timeCountSetter=(dict,tick)=>{
@@ -296,16 +371,6 @@ const timeCountSetter=(dict,tick)=>{
         }
     }
     return dict;
-}
-
-const timeFormatter=(str)=>{
-    let newstr=str;
-    if(str.length===2){
-        newstr=str+":00-"+str+":59";
-    }else if(str.length===4){
-        newstr=str+"0-"+str+"9";
-    }
-    return newstr;
 }
 
 function published2time(since,until,timetick){
@@ -352,6 +417,112 @@ function published2time(since,until,timetick){
     return timeCount;
 }
 
+/* Slider */
+var slider={
+    summary:elem("summary-slider"), 
+    figure:elem("figure-slider"), 
+    ranking:elem("ranking-slider"), 
+};
+
+const slider_setting={
+    start: [ 0, 100 ], // ハンドルの初期位置を指定。数を増やせばハンドルの数も増える。
+    step: 1, // スライダを動かす最小範囲を指定。
+    margin: 1, // ハンドル間の最低距離を指定。
+    connect: true, // ハンドル間を色塗りするかどうか
+    direction: 'ltr', // どちらを始点にするか。ltr(Left To Right) or rtl(Right To Left)。
+    orientation: 'horizontal', // スライダーの方向。横向きか縦か。縦の場合は、cssでrangeのheightを適当に設定しないとつぶれてしまう。
+    behaviour: 'tap-drag', // ハンドルの動かし方。
+    range: {
+        'min': 0,
+        'max': 100
+    }, // スライダーの始点と終点 今回は100の範囲に対して、10がステップ、かつdensity 5なので、10毎に大きな目盛り、5毎に小さな目盛り。
+};
+
+for(const key in slider){
+    noUiSlider.create(slider[key], slider_setting);
+}
+
+slider.summary.noUiSlider.on("update",(values)=>{
+    if(outbox_json){
+        let date=new Date(db_since);
+        date.setDate(1);
+        date.setMonth(date.getMonth()+Number(values[0]));
+        range.summary[0]=date2str(date).substring(0,10);
+        date.setMonth(date.getMonth()+Number(values[1])-Number(values[0]));
+        date.setDate(0);
+        range.summary[1]=date2str(date).substring(0,10);
+        if(range.summary[0]<db_since) range.summary[0]=db_since;
+        if(range.summary[1]>db_until) range.summary[1]=db_until;
+        elem("summary_since").value=range.summary[0];
+        elem("summary_until").value=range.summary[1];
+        showSummary();
+    }
+});
+
+slider.figure.noUiSlider.on("update",(values)=>{
+    if(plot_date&&plot_time&&plot_scatter){
+        let date=new Date(db_since);
+        date.setDate(1);
+        date.setMonth(date.getMonth()+Number(values[0]));
+        range.figure[0]=date2str(date).substring(0,10);
+        date.setMonth(date.getMonth()+Number(values[1])-Number(values[0]));
+        date.setDate(0);
+        range.figure[1]=date2str(date).substring(0,10);
+        if(range.figure[0]<db_since) range.figure[0]=db_since;
+        if(range.figure[1]>db_until) range.figure[1]=db_until;
+        elem("figure_since").value=range.figure[0];
+        elem("figure_until").value=range.figure[1];
+        showFigure(true,false,false);
+    }
+});
+
+slider.ranking.noUiSlider.on("update",(values)=>{
+    if(plot_mentions&&plot_reblog&&plot_likeacct){
+        let date=new Date(db_since);
+        date.setDate(1);
+        date.setMonth(date.getMonth()+Number(values[0]));
+        range.ranking[0]=date2str(date).substring(0,10);
+        date.setMonth(date.getMonth()+Number(values[1])-Number(values[0]));
+        date.setDate(0);
+        range.ranking[1]=date2str(date).substring(0,10);
+        if(range.ranking[0]<db_since) range.ranking[0]=db_since;
+        if(range.ranking[1]>db_until) range.ranking[1]=db_until;
+        elem("ranking_since").value=range.ranking[0];
+        elem("ranking_until").value=range.ranking[1];
+        showRanking();
+    }
+});
+
+var rankingTickSlider=elem("ranking-tick-slider");
+noUiSlider.create(rankingTickSlider, {
+    start: 0, // ハンドルの初期位置を指定。数を増やせばハンドルの数も増える。
+    step: 1, // スライダを動かす最小範囲を指定。
+    direction: 'ltr', // どちらを始点にするか。ltr(Left To Right) or rtl(Right To Left)。
+    orientation: 'horizontal', // スライダーの方向。横向きか縦か。縦の場合は、cssでrangeのheightを適当に設定しないとつぶれてしまう。
+    behaviour: 'tap', // ハンドルの動かし方。
+    range: {
+        'min': 0,
+        'max': 1
+    }, // スライダーの始点と終点 今回は100の範囲に対して、10がステップ、かつdensity 5なので、10毎に大きな目盛り、5毎に小さな目盛り。
+});
+
+var ranking_tick=1;
+rankingTickSlider.noUiSlider.on("update",(values)=>{
+    if(plot_mentions&&plot_reblog){
+        if(values[0]==="1.00") ranking_tick=7;
+        else ranking_tick=1;
+        showRanking();
+    }
+})
+
+/* showData */
+var metroColors=["#f39700","#e60012","#9caeb7","#00a7db","#009944","#d7c447","#9b7cb6","#00ada9","#bb641d"];
+var summary_datetick=10, figure_tick=[8,15];
+var range={
+    summary:[0,0],
+    figure:[0,0],
+    ranking:[0,0],
+};
 function showAccount(){
     elem("avatar").innerHTML='<img height="50px" src='+account.avatar+">";
     elem("display").innerText=account.display_name;
@@ -408,7 +579,7 @@ function showSummary(){
         return sum;
     }
     let count={};
-    for(const key of ["posts","replies","favacct"]){
+    for(const key of ["posts","replies","likeacct"]){
         count[key]=counter(dateCount[key]);
     }
     for(const key in dateCount.visibility){
@@ -454,7 +625,7 @@ function showSummary(){
     elem("posts_count").innerText=count.posts;
     elem("reply_count").innerText=count.replies;
     elem("boost_count").innerText=count.boost;
-    elem("fav_count").innerText=Object.keys(favour).length+" times through whole term**";
+    elem("like_count").innerText=Object.keys(likes).length+" times through whole term**";
 /*
     elem("post_date_rank").innerHTML=ranking(dateCount.posts,5);
     elem("boost_date_rank").innerHTML=ranking(dateCount.visibility.boost,5);
@@ -523,14 +694,14 @@ function showSummary(){
         elem("api_info").className="";
         elem("app_ratio").innerHTML=app_result.str;
         elem("app_ratio").className="";
-        elem("fav_count").innerText=count.favacct;
+        elem("like_count").innerText=count.likeacct;
         elem("boosted_count").innerText=counter(dateCount.reblogged);
-        elem("faved_count").innerText=counter(dateCount.favourited);
+        elem("liked_count").innerText=counter(dateCount.liked);
         elem("api_ed").className="";
 
-        elem("fav_date_rank").innerHTML=ranking(dateCount.favacct,5);
+        elem("like_date_rank").innerHTML=ranking(dateCount.likeacct,5);
         elem("boosted_date_rank").innerHTML=edRanking(dateCount.reblogged,5);
-        elem("faved_date_rank").innerHTML=edRanking(dateCount.favourited,5);
+        elem("liked_date_rank").innerHTML=edRanking(dateCount.liked,5);
 
         elem("summaryLowerRow").className="";
         plot_app = new Chart(elem("app_pie"),{
@@ -549,106 +720,6 @@ function showSummary(){
 */
 }
 
-/* Slider */
-var slider={
-    summary:elem("summary-slider"), 
-    figure:elem("figure-slider"), 
-    ranking:elem("ranking-slider"), 
-};
-
-const slider_setting={
-    start: [ 0, 100 ], // ハンドルの初期位置を指定。数を増やせばハンドルの数も増える。
-    step: 1, // スライダを動かす最小範囲を指定。
-    margin: 1, // ハンドル間の最低距離を指定。
-    connect: true, // ハンドル間を色塗りするかどうか
-    direction: 'ltr', // どちらを始点にするか。ltr(Left To Right) or rtl(Right To Left)。
-    orientation: 'horizontal', // スライダーの方向。横向きか縦か。縦の場合は、cssでrangeのheightを適当に設定しないとつぶれてしまう。
-    behaviour: 'tap-drag', // ハンドルの動かし方。
-    range: {
-        'min': 0,
-        'max': 100
-    }, // スライダーの始点と終点 今回は100の範囲に対して、10がステップ、かつdensity 5なので、10毎に大きな目盛り、5毎に小さな目盛り。
-};
-
-for(const key in slider){
-    noUiSlider.create(slider[key], slider_setting);
-}
-
-slider.summary.noUiSlider.on("update",(values)=>{
-    if(outbox_json){
-        let date=new Date(db_since);
-        date.setDate(1);
-        date.setMonth(date.getMonth()+Number(values[0]));
-        range.summary[0]=date2str(date).substring(0,10);
-        date.setMonth(date.getMonth()+Number(values[1])-Number(values[0]));
-        date.setDate(0);
-        range.summary[1]=date2str(date).substring(0,10);
-        if(range.summary[0]<db_since) range.summary[0]=db_since;
-        if(range.summary[1]>db_until) range.summary[1]=db_until;
-        elem("summary_since").value=range.summary[0];
-        elem("summary_until").value=range.summary[1];
-        showSummary();
-    }
-});
-
-slider.figure.noUiSlider.on("update",(values)=>{
-    if(plot_date&&plot_time&&plot_scatter){
-        let date=new Date(db_since);
-        date.setDate(1);
-        date.setMonth(date.getMonth()+Number(values[0]));
-        range.figure[0]=date2str(date).substring(0,10);
-        date.setMonth(date.getMonth()+Number(values[1])-Number(values[0]));
-        date.setDate(0);
-        range.figure[1]=date2str(date).substring(0,10);
-        if(range.figure[0]<db_since) range.figure[0]=db_since;
-        if(range.figure[1]>db_until) range.figure[1]=db_until;
-        elem("figure_since").value=range.figure[0];
-        elem("figure_until").value=range.figure[1];
-        showFigure(true,false,false);
-    }
-});
-
-slider.ranking.noUiSlider.on("update",(values)=>{
-    if(plot_mentions&&plot_reblog&&plot_favacct){
-        let date=new Date(db_since);
-        date.setDate(1);
-        date.setMonth(date.getMonth()+Number(values[0]));
-        range.ranking[0]=date2str(date).substring(0,10);
-        date.setMonth(date.getMonth()+Number(values[1])-Number(values[0]));
-        date.setDate(0);
-        range.ranking[1]=date2str(date).substring(0,10);
-        if(range.ranking[0]<db_since) range.ranking[0]=db_since;
-        if(range.ranking[1]>db_until) range.ranking[1]=db_until;
-        elem("ranking_since").value=range.ranking[0];
-        elem("ranking_until").value=range.ranking[1];
-        showRanking();
-    }
-});
-
-var rankingTickSlider=elem("ranking-tick-slider");
-noUiSlider.create(rankingTickSlider, {
-    start: 0, // ハンドルの初期位置を指定。数を増やせばハンドルの数も増える。
-    step: 1, // スライダを動かす最小範囲を指定。
-    direction: 'ltr', // どちらを始点にするか。ltr(Left To Right) or rtl(Right To Left)。
-    orientation: 'horizontal', // スライダーの方向。横向きか縦か。縦の場合は、cssでrangeのheightを適当に設定しないとつぶれてしまう。
-    behaviour: 'tap', // ハンドルの動かし方。
-    range: {
-        'min': 0,
-        'max': 1
-    }, // スライダーの始点と終点 今回は100の範囲に対して、10がステップ、かつdensity 5なので、10毎に大きな目盛り、5毎に小さな目盛り。
-});
-
-var ranking_tick=1;
-rankingTickSlider.noUiSlider.on("update",(values)=>{
-    if(outbox_json){
-        if(values[0]==="1.00") ranking_tick=7;
-        else ranking_tick=1;
-        showRanking();
-    }
-})
-
-/* Figure */
-var metroColors=["#f39700","#e60012","#9caeb7","#00a7db","#009944","#d7c447","#9b7cb6","#00ada9","#bb641d"];
 var plot_date,plot_time,plot_scatter;
 function showFigure(date_term,date_tick,time_tick){
     if(elem("figure_since").value&&elem("figure_until").value){
@@ -828,7 +899,7 @@ function showFigure(date_term,date_tick,time_tick){
 }
 
 /* Ranking */
-var plot_mentions, plot_reblog, plot_favacct;
+var plot_mentions, plot_reblog, plot_likeacct;
 function showRanking(){
     if(elem("ranking_since").value&&elem("ranking_until").value){
         range.ranking[0]=elem("ranking_since").value;
@@ -854,7 +925,7 @@ function showRanking(){
                 num+=y;
             }
             datasets.push({
-                label:account_key,
+                label:account_key, //"onekodate".repeat(Math.ceil(account_key.length/"onekodate".length)).substring(0,account_key.length),
                 fontColor:"#ffffff",
                 data:data,
                 num:num,
@@ -905,24 +976,24 @@ function showRanking(){
                 }
             });
         };
-        if(val==="favacct"&&datasets.length===0){
-            let favou={},data=[];
-            for(const favour_key in favour){
-                if(!favou[favour[favour_key].favacct]) favou[favour[favour_key].favacct]=[];
-                favou[favour[favour_key].favacct].push(favour_key);
+        if(val==="likeacct"&&datasets.length===0){
+            let like={},data=[];
+            for(const likes_key in likes){
+                if(!like[likes[likes_key].likeacct]) like[likes[likes_key].likeacct]=[];
+                like[likes[likes_key].likeacct].push(likes_key);
             }
-            for(const favou_key in favou){
+            for(const like_key in like){
                 data.push({
-                    account:favou_key,
-                    num:favou[favou_key].length,
+                    account:like_key,
+                    num:like[like_key].length,
                 });
             }
             data.sort((a,b)=>(a.num-b.num));
             data.reverse();
             labels=data.map(val=>val.account);
             data=data.map(val=>val.num);
-            if(plot_favacct) plot_favacct.destroy();
-            result=showBar("favacct",labels.slice(0,30),data.slice(0,30));
+            if(plot_likeacct) plot_likeacct.destroy();
+            result=showBar("likeacct",labels.slice(0,30),data.slice(0,30));
         }else if(datasets.every((val)=>{return (val.data.length===1)})){
             const labels=datasets.map(val=>val.label);
             const data=datasets.map(val=>val.num);
@@ -990,8 +1061,8 @@ function showRanking(){
     plot_mentions=showRank("mentions");
     if(plot_reblog) plot_reblog.destroy();
     plot_reblog=showRank("reblog");
-    if(plot_favacct) plot_favacct.destroy();
-    plot_favacct=showRank("favacct");
+    if(plot_likeacct) plot_likeacct.destroy();
+    plot_likeacct=showRank("likeacct");
 }
 
 /* Search */
@@ -1058,160 +1129,110 @@ function loadSearch(){
     loading(0);
 }
 
-/* Loading */
-var fileArea = elem('dropArea');
-
-fileArea.addEventListener('dragover', (e)=>{
-    e.preventDefault();
-    fileArea.classList.add('dragover');
-});
-
-fileArea.addEventListener('dragleave', (e)=>{
-    e.preventDefault();
-    fileArea.classList.remove('dragover');
-});
-
-fileArea.addEventListener('drop', (e)=>{
-    e.preventDefault();
-    fileArea.classList.remove('dragover');
-    loadFile(e.dataTransfer.files);
-});
-
-elem('uploadFile').addEventListener('change', ()=>{
-    loadFile(elem('uploadFile').files);
-});
-
-function loadFile(files){
-    loading(1);
-    for(const file of files){
-        if(file.type==="application/json"){
-            var reader = new FileReader();
-            reader.onload=(event)=>{
-                elem("error-box").style.display="none"; 
-                const json=JSON.parse(event.target.result);
-                if(json["id"]==="outbox.json"){
-                    outbox_json=json;
-                    elem("ob_cap").className="";
-                }else if(json["id"]==="likes.json"){
-                    likes_json=json;
-                    elem("lk_cap").className="";
-                }else if(json["id"]==="account.json"){
-                    account=json;
-                    elem("ac_cap").className="";
-                }else error("You chose wrong file.");
-                if(outbox_json&&likes_json&&account){
-                    loadPage();
-                    //elem("create").className="";
-                }else if(outbox_json&&likes_json){
-                    elem("loadButton").className="";
-                }else if(account&&!outbox_json&&!likes_json){
-                    elem("loadButton").className="";
-                }
-            };  
-            reader.readAsText(file);
-        }else error("You chose wrong file.");
-    }
-    loading(0);
-}
-
-function loadPage(){
-    elem("dropArea").className="invisible";
-    elem("load").className="invisible";
-    json2db();
-    outbox2published();
-    showSummary();
-    showFigure(true,true,true);
-    showRanking();
-    elem("main").className="";
-}
-
 /* Database */
 var ver = 1, dbName="mastodon", storeName="archive", key_id=1;
 var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
 var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.mozIDBTransaction;
 var db = null;
 
-function createSample() {
-    var reqOpen = indexedDB.open(dbName, ver);
-    reqOpen.onupgradeneeded = function(e) {
+function createSample(){
+    let openRequest = indexedDB.open(dbName, ver);
+    openRequest.onupgradeneeded = function(e){
         console.log("create-upgradeneeded");
-        db = reqOpen.result;
+        db = openRequest.result;
         db.createObjectStore(storeName, { "keyPath": "id" });
         console.log(db.objectStoreNames);
     }
-    reqOpen.onsuccess = function(e) {
-        db = reqOpen.result;
-        var transaction = db.transaction([storeName], "readwrite");
-        var store = transaction.objectStore(storeName);
-        var data = {
+    openRequest.onsuccess = function(e) {
+        db = openRequest.result;
+        let addRequest = db.transaction(storeName, "readwrite").objectStore(storeName).put({
             id:key_id,
             outbox:outbox,
             likes:likes,
             access:access,
-        };
-        var reqAdd = store.put(data);
-        reqAdd.onsuccess=function(e){
-            elem("deleteoutbox").innerText="Successly saved.";
-            elem("create").className="invisible";
-            elem("delete").className="";
+        });
+        addRequest.onsuccess=function(){
+            console.log("Success");
+            elem("createSample").className="invisible";
+            elem("deleteSample").className="datacontent";
         }
-        reqAdd.onerror = function(e){
-            elem("createoutbox").innerText="Whoops, something went wrong.";
+        addRequest.onerror = function(err){
+            console.log(err.message);
         }
     }           
-    reqOpen.onerror = function(err){console.log(err.message)}
-    reqOpen.onblocked=function(err){console.log("blocked")}
+    openRequest.onerror = function(err){console.log(err.message)}
+    openRequest.onblocked=function(err){console.log("blocked")}
 }
 /*
 function addSample() {
-    var reqOpen=indexedDB.open(dbName,ver);
-    reqOpen.onsuccess=function(e){
+    var openRequest=indexedDB.open(dbName,ver);
+    openRequest.onsuccess=function(e){
         db=event.target.result;
         var transaction = db.transaction([storeName], "readwrite");
         var store = transaction.objectStore(storeName);
         var data = {"id":key_id,"outbox":"outbox_json","likes":"likes_json"};
-        var reqAdd = store.put(data);
-        reqAdd.onsuccess=function(e){console.log("success")}
-        reqAdd.onerror = function(e){console.log(e)}
+        var addRequest = store.put(data);
+        addRequest.onsuccess=function(e){console.log("success")}
+        addRequest.onerror = function(e){console.log(e)}
     }
 }
 */
 function getSample() {
     loading(1);
-    var reqOpen=indexedDB.open(dbName,ver), data=null;
-    reqOpen.onsuccess=function(e){
-        db=reqOpen.result;
-        if(db){
-            var transaction = db.transaction([storeName], IDBTransaction.READ_ONLY);
-            var reqGet = transaction.objectStore(storeName).get(key_id);
-            reqGet.onsuccess = function(e){
-                data = reqGet.result;
-                outbox_json=data.outbox;
-                likes_json=data.likes;
-                if(outbox_json&&likes_json){
+    let openRequest=indexedDB.open(dbName,ver);
+    db=null;
+    openRequest.onsuccess=function(e){
+        db=openRequest.result;
+        if(db.objectStoreNames.length>0){
+            const transaction = db.transaction([storeName], IDBTransaction.READ_ONLY);
+            let getRequest = transaction.objectStore(storeName).get(key_id);
+            getRequest.onsuccess = function(e){
+                outbox=getRequest.result.outbox;
+                likes=getRequest.result.likes;
+                if(outbox&&likes){
                     loadPage();
-                    elem("delete").className="";
+                    elem("createSample").className="invisible";
+                    elem("deleteSample").className="datacontent";
                 }
                 else console.log("Not Found");
             }
-            reqGet.onerror=function(e){console.log(e)}
-        }else console.log("db none");
+            getRequest.onerror=function(e){console.log(e)}
+        }else{
+            console.log("db none");
+            db.close();
+            deleteSample();
+        }   
     }
-    reqOpen.onerror=function(e){console.log(e)}
+    openRequest.onerror=function(e){console.log(e)}
+    loading(0);
 }
 
 function deleteSample() {
     if(db) db.close();
-    var reqDelete = indexedDB.deleteDatabase(dbName);
-    reqDelete.onsuccess=function(e){
-        elem("createoutbox").innerText="Successly deleted.";
-        elem("delete").className="invisible";
-        elem("create").className="";
+    var deleteRequest = indexedDB.deleteDatabase(dbName);
+    deleteRequest.onsuccess=function(e){
+        console.log("Deleted in Successful");
+        elem("createSample").className="datacontent";
+        elem("deleteSample").className="invisible";
     }
-    reqDelete.onerror = function(e){
-        elem("deleteoutbox").innerText="Whoops, something went wrong.";
+    deleteRequest.onerror = function(err){
+        console.log(err.message);
     }
-    reqDelete.onblocked=function(e){
-        elem("deleteoutbox").innerText="There is a severe error, I hope you don't get this message.";
+    deleteRequest.onblocked=function(e){
+        console.log("There is a severe error, I hope you don't get this message.");
+    }
+}
+
+function downloadJson(){
+    if(outbox&&likes){
+        let downloadLink=elem("downloadLink");
+        const blob=new Blob([JSON.stringify({
+            id:"archive.json",
+            outbox:outbox,
+            likes:likes,
+        })],{type:"application/json"});
+        downloadLink.href=URL.createObjectURL(blob);
+        downloadLink.download="mastodonArchiveViewer.json";
+        downloadLink.click();
     }
 }
