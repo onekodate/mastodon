@@ -443,7 +443,7 @@ for(const key in slider){
 }
 
 slider.summary.noUiSlider.on("update",(values)=>{
-    if(outbox_json){
+    if(plot_visibility){
         let date=new Date(db_since);
         date.setDate(1);
         date.setMonth(date.getMonth()+Number(values[0]));
