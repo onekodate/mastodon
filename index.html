@@ -160,8 +160,8 @@
                     <div class=dateSelect>
                         <div id="ranking-slider"></div>
                         <p>
-                            <input class=txtbox type=text placeholder=YYYY-MM-DD id=ranking_since onChange='dateParser("ranking");'>--
-                            <input class=txtbox type=text placeholder=YYYY-MM-DD id=ranking_until onChange='dateParser("ranking");'>
+                            <input class=txtbox type=text placeholder=YYYY-MM-DD id=ranking_since onChange='dateParser("ranking");showRanking();'>--
+                            <input class=txtbox type=text placeholder=YYYY-MM-DD id=ranking_until onChange='dateParser("ranking");showRanking();'>
                             <span>  </span>
                             <button class="date_selector invisible" href="#apism" onclick="setAPI();">API Full</button>
                             <button class=date_selector onclick="slider.ranking.noUiSlider.set([0,100]);showRanking();">Full</button>
