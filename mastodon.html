@@ -13,7 +13,7 @@
             <div class=indeterminate></div>
         </div>
         <div class=header>
-            <p id=dropArea class="">ここにoutbox.jsonとlikes.jsonをドロップしてください。<br>または</p>
+            <p id=dropArea class="">.tar.gzファイルを解凍してその中のoutbox.jsonとlikes.jsonをドロップしてください。<br>または</p>
             <div class="row container" id=error-box style="display:none;">
                 <div class=card-panel>
                     <button onclick='elem("error-box").style.display="none"'>×</button>
@@ -251,6 +251,7 @@
         <a id="downloadLink"></a>
         <div class=footer>
             <div class=content>
+                <p>圧縮ファイルを解凍するのは<a target="_blank" href="https://sevenzip.osdn.jp/">7zip</a>などで。</p>
                 <p>全てJavaScriptで処理されているため、サーバーにデータは保存されません。</p>
                 <p>クライアントサイドでブラウザに付属したデータベースを利用することが可能で、<br>その場合は再アクセス後自動的にデータを読み込みます。そのデータの管理はData Managerから行ってください。</p>
                 <p>ページを更新するとファイル選択画面に戻ります。ファイルを間違えた場合はページを更新してください。</p>
