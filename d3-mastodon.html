@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Mastodon Archive Visualizer powered by d3.js</title>
+		<link rel="icon" href="favicon.ico" id="favicon">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.0/nouislider.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <link rel="stylesheet" href="d3-mastodon.css">
+	</head>
+	<body onload="getSample();">
+		<div class=progress id=progress style="display:none;">
+			<div class=indeterminate></div>
+		</div>
+		<div id=file_drop>
+			<p id=load>.tar.gzファイルを解凍してその中のoutbox.jsonとlikes.jsonをドロップしてください。<br>
+				または<br>
+				<span><input type=file multiple=multiple accept=".json" onchange="loadFile(this.files);">ファイルを選択する</span>
+			</p>
+		</div>
+        <button class=button_for_card id=button_for_info>INFO</button>
+        <div class=card id=info>
+            <p>圧縮ファイルの解凍は、<a target="_blank" href="https://sevenzip.osdn.jp/">7zip</a>などをご利用ください。</p>
+            <p>データはJavaScriptによってクライアントサイドで処理され、サーバーにデータは送信されません。</p>
+            <p>クライアントサイドでブラウザに付属したデータベースを利用することが可能で、<br>
+                その場合は再アクセス後自動的にデータを読み込みます。データの保存設定と削除は左下のDATABASEから行ってください。</p>
+            <p>ページを更新するとファイル選択画面に戻ります。ファイルを間違えた場合はページを更新してください。</p>
+            <p>Chrome for Windowsのみで動作確認しています。不具合、要望等ありましたらお気軽にご連絡ください。</p>
+            <p>ソースコード:<a target="_blank" href="https://github.com/onekodate/mastodon">Github</a>
+                開発者:<a target="_blank" href="https://mstdn.beer/web/accounts/80060">@onekodate@mstdn.beer</a></p>
+        </div>
+        <div id="main" style="display:none;">
+            <button class=button_for_card id=button_for_search>SEARCH</button>
+            <button class=button_for_card id=button_for_database>DATABASE</button>
+            <div class=card id=search>
+                <div id="slider"></div>
+                <p>
+                    <input class=txtbox type=text placeholder=YYYY-MM-DD id=range_since onChange="button(this);">
+                    <span> -- </span>
+                    <input class=txtbox type=text placeholder=YYYY-MM-DD id=range_until onChange="button(this);">
+                    <span>	</span>
+                    <button id=b_slider onclick="button(this);">Full</button><br>
+                </p>
+                <table>
+
+                </table>
+                <div class=wrapper>
+                    <div class=palette id=visi_palette>
+                        <b class=title>Visibility</b>
+                        <p>
+                            <label id=visi_public	><input onclick="button(this);" type=checkbox name=visi id=v_public checked=checked><em>Public</em></label>
+                            <label id=visi_unlisted ><input onclick="button(this);" type=checkbox name=visi id=v_unlisted checked=checked><em>Unlisted</em></label>
+                            <label id=visi_private	><input onclick="button(this);" type=checkbox name=visi id=v_private checked=checked><em>Private</em></label>
+                            <label id=visi_direct	><input onclick="button(this);" type=checkbox name=visi id=v_direct checked=checked><em>Direct</em></label>
+                            <label id=visi_boost	><input onclick="button(this);" type=checkbox name=visi id=v_boost checked=checked><em>Boost</em></label>
+                            <label id=visi_like		><input onclick="button(this);" type=checkbox name=visi id=v_like checked=checked><em>Like</em></label>
+                        </p>
+                    </div>
+                </div>
+                <p id=summary></p>
+                <div>
+                    <input placeholder="Word" type=search id=word onChange="dataSearch(this);">
+                    <input placeholder="YYYY-MM-DD" type=search id=date onChange="dataSearch(this);">
+                    <input placeholder="Account" type=search id=account onChange="dataSearch(this);">
+                </div>
+                <p id=request></p>
+                <div id=result></div>
+            </div>
+            <div class=card id=database>
+                <p><button class=manager onclick="archive.save();">Save</button>データを上書き保存します。</p>
+                <p><button class=manager onclick="archive.delete();">Clear</button>データベースを削除します。</p>
+            </div>
+            <div id=plot>
+                <div class=palette id=type_palette>
+                    <p>
+                        <span>Bar Plot</span>
+                        <label id=type_number	><input onclick="button(this);" type=radio name=type id=t_number checked=checked><em>Number</em></label>
+                        <label id=type_ratio	><input onclick="button(this);" type=radio name=type id=t_ratio><em>Ratio</em></label>
+                        <span>Chart</span>
+                        <label id=type_horizon	><input onclick="button(this);" type=radio name=type id=t_horizon><em>Horizon</em></label>
+                        <label id=type_calendar ><input onclick="button(this);" type=radio name=type id=t_calendar><em>Calendar</em></label>
+                        <label id=reso_pie	 	><input onclick="button(this);" type=radio name=reso id=r_pie><em>Pie</em></label>
+                        <span>Line Plot</span>
+                        <label id=type_density 	><input onclick="button(this);" type=radio name=type id=t_density><em>Density</em></label>
+                        <label id=type_cumulative><input onclick="button(this);" type=radio name=type id=t_cumulative><em>Cumulative</em></label>
+                        <span>Ranking</span>
+                        <label id=rank_date		><input onclick="button(this);" type=radio name=reso id=r_date><em>Date</em></label>
+                        <label id=rank_account	><input onclick="button(this);" type=radio name=reso id=r_account><em>Account</em></label>
+                    </p>
+                </div>
+                <div class=palette id=stack_palette>
+                    <p>
+                        <span>Stack</span>
+                        <label id=stack_day	 	><input onclick="button(this);" type=radio name=stack id=s_day><em>Day</em></label>
+                        <label id=stack_week	><input onclick="button(this);" type=radio name=stack id=s_week><em>Week</em></label>
+                        <label id=stack_month	><input onclick="button(this);" type=radio name=stack id=s_month><em>Month</em></label>
+                        <label id=stack_year	><input onclick="button(this);" type=radio name=stack id=s_year><em>Year</em></label>
+                        <label id=stack_none	><input onclick="button(this);" type=radio name=stack id=s_none checked=checked><em>None</em></label>
+                    </p>
+                </div>
+
+                <div id=map></div>
+
+                <div class=palette id=reso_palette>
+                    <p>
+                        <span>Resolution</span>
+                        <label id=reso_minute	><input onclick="button(this);" type=radio name=reso id=r_minute><em>1 Mnt</em></label>
+                        <label id=reso_minutes	><input onclick="button(this);" type=radio name=reso id=r_minutes><em>10 Mnts</em></label>
+                        <label id=reso_hour	 	><input onclick="button(this);" type=radio name=reso id=r_hour><em>1 Hour</em></label>
+                        <label id=reso_hours	><input onclick="button(this);" type=radio name=reso id=r_hours><em>2 Hrs</em></label>
+                        <label id=reso_day		><input onclick="button(this);" type=radio name=reso id=r_day checked=checked><em>Day</em></label>
+                        <label id=reso_week	 	><input onclick="button(this);" type=radio name=reso id=r_week><em>Week</em></label>
+                        <label id=reso_month	><input onclick="button(this);" type=radio name=reso id=r_month><em>Month</em></label>
+                    </p>
+                </div>
+            </div>
+        </div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.0/nouislider.min.js"></script>
+		<script src="https://d3js.org/d3.v7.js"></script>
+		<script src="d3-mastodon.js"></script>
+	</body>
+</html>

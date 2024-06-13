@@ -47,7 +47,7 @@
                         <p><span id=display></span>@<span id=acct></span></p>
                         <p id=note></p>
                         <p>Since: <span id=created></span> Last: <span id=last></span></p>
-                        <p>Toots:<span id=numstatuses></span>, Followees:<span id=numfollowing></span>, Followers:<span id=numfollower></span></p>                       
+                        <p>Toots:<span id=numstatuses></span>, Followees:<span id=numfollowing></span>, Followers:<span id=numfollower></span></p>
                         <p class=close>
                             <a href="#account" onclick="openclose(this);">Close</a>
                         </p>
@@ -74,7 +74,7 @@
                             <p>You used Mastodon <span id=up_count></span>/<span id=days_count></span> days (<span id=up_ratio></span>%), and toot <span id=tpd></span> times per day.</p>
                             <p>
                                 <canvas id=visibility_pie style="position:relative; height:70;"></canvas>
-                                <canvas class=invisible id=app_pie style="position:relative; height:70;"></canvas>    
+                                <canvas class=invisible id=app_pie style="position:relative; height:70;"></canvas>
                             </p>
                             <p><span id=public_ratio></span>% in Public, <span id=unlisted_ratio></span>% in Unlisted, <span id=private_ratio></span>% in Private, <span id=direct_ratio></span>% in Direct, <span id=boost_ratio></span>% in Boost.</p>
                             <p id=app_ratio class=invisible></p>
@@ -87,15 +87,15 @@
                                 <div class=rankbox>
                                     <p>Post</p>
                                     <b id=post_date_rank></b>
-                                </div><br>    
+                                </div><br>
                                 <div class=rankbox>
                                     <p>Boost</p>
                                     <b id=boost_date_rank></b>
-                                </div><br>                         
+                                </div><br>
                                 <div class=rankbox>
                                     <p>Reply</p>
                                     <b id=reply_date_rank></b>
-                                </div><br>                         
+                                </div><br>
                             </div>
                             <div id=summaryLowerRow class=invisible>
                                 <div class=rankbox>
@@ -105,20 +105,20 @@
                                 <div class=rankbox>
                                     <p>Most Boosted</p>
                                     <b id=boosted_date_rank></b>
-                                </div>                             
+                                </div>
                                 <div class=rankbox>
                                     <p>Most Favourited</p>
                                     <b id=liked_date_rank></b>
                                 </div>
-                            </div> 
-                        </div>                            
+                            </div>
+                        </div>
                         <p class=close>
                             <a href="#summary" onclick="openclose(this);">Close</a>
                         </p>
                     </div>
                 </div>
             </div>
-            
+
             <div class=contentbox>
                 <button class=open href="#figure" onclick="openclose(this);">Figure</button>
                 <div id=figure class=invisible>
@@ -134,7 +134,7 @@
                             </p>
                             <p>
                                 <button class=date_selector onclick="figure_tick[0]=10;showFigure(false,true,false);">Day</button>
-                                <button class=date_selector onclick="figure_tick[0]=7;showFigure(false,true,false);">Month</button>                          
+                                <button class=date_selector onclick="figure_tick[0]=7;showFigure(false,true,false);">Month</button>
                             </p>
                         </div>
                         <p><canvas id=datebar style="position:relative; width:80%"></canvas></p>
@@ -142,10 +142,10 @@
                         <p>
                             <button class=date_selector onclick="figure_tick[1]=16;showFigure(false,false,true);">1 Minute</button>
                             <button class=date_selector onclick="figure_tick[1]=15;showFigure(false,false,true);">10 Mnts</button>
-                            <button class=date_selector onclick="figure_tick[1]=13;showFigure(false,false,true);">1 Hour</button>                                    
+                            <button class=date_selector onclick="figure_tick[1]=13;showFigure(false,false,true);">1 Hour</button>
                         </p>
                         <p><canvas id=timebar style="position:relative; width:80%"></canvas></p>
-                        <p class=download><a href="#timebar" onclick="canvas2png(this);">Download</a></p>                            
+                        <p class=download><a href="#timebar" onclick="canvas2png(this);">Download</a></p>
                         <p><canvas id=scatter style="position:relative; width:80%"></canvas></p>
                         <p class=download><a href="#scatter" onclick="canvas2png(this);">Download</a></p>
                         <p class=close>
@@ -153,8 +153,8 @@
                         </p>
                     </div>
                 </div>
-            </div>               
-            
+            </div>
+
             <div class=contentbox>
                 <button class=open href="#ranking" onclick="openclose(this);">Ranking</button>
                 <div id=ranking class=invisible>
@@ -173,19 +173,19 @@
                         <div class=rankingTopRow>
                             <p>Mentions</p>
                             <p><canvas id=mentions style="position:relative; width:80%"></canvas></p>
-                            <p class=download><a href="#mentions" onclick="canvas2png(this);">Download</a></p>         
+                            <p class=download><a href="#mentions" onclick="canvas2png(this);">Download</a></p>
                             <p>Reblog</p>
                             <p><canvas id=reblog style="position:relative; width:80%;"></canvas></p>
-                            <p class=download><a href="#reblog" onclick="canvas2png(this);">Download</a></p>         
+                            <p class=download><a href="#reblog" onclick="canvas2png(this);">Download</a></p>
                             <p>Favourite</p>
-                            <p><canvas id=likeacct style="position:relative; width:80%;"></canvas></p>     
-                            <p class=download><a href="#likeacct" onclick="canvas2png(this);">Download</a></p>              
+                            <p><canvas id=likeacct style="position:relative; width:80%;"></canvas></p>
+                            <p class=download><a href="#likeacct" onclick="canvas2png(this);">Download</a></p>
                         </div>
                         <div id=rankingLowerRow class=invisible>
                             <p><canvas id=liked style="position:relative; width:80%"></canvas></p>
                             <p><canvas id=bsted style="position:relative; width:80%;"></canvas></p>
-                        </div> 
-                    </div>                                            
+                        </div>
+                    </div>
                     <p class=close>
                         <a href="#ranking" onclick="openclose(this);">Close</a>
                     </p>
@@ -211,7 +211,7 @@
                         </p>
                     </div>
                 </div>
-            </div> 
+            </div>
             <div id=managerDiv class="contentbox">
                 <button class=open href="#manager" onclick="openclose(this);">Data Manager</button>
                 <div id=manager class=invisible>
@@ -220,7 +220,7 @@
                             <div class=left>
                                 <p>データを上書き保存します。</p>
                                 <b id=datanamelist></b>
-                                <input type=text id=dataname class=invisible> 
+                                <input type=text id=dataname class=invisible>
                             </div>
                             <div class=right><button class=manager onclick="createSample();">Save Data</button></div>
                         </div>
@@ -229,7 +229,7 @@
                                 <p>データを追加できるようにします。最初の画面に戻るので追加するデータを読み込んで、改めて保存しなおしてください。</p>
                             </div>
                             <div class=right><button class=manager>Add Data</button></div>
-                        </div>                    
+                        </div>
                         <div class=datacontent>
                             <div class=left>
                                 <p>データをまたこのサイトで使えるjsonファイルとしてダウンロードします。</p>
@@ -241,7 +241,7 @@
                                 <p>データベースを削除します。削除する前にデータをダウンロードすることをおすすめします。</p>
                             </div>
                             <div class=right><button class=manager onclick="deleteSample();">Clear Data</button></div>
-                        </div>                            
+                        </div>
                     </div>
                     <p class=close>
                         <a href="#manager" onclick="openclose(this);">Close</a>
@@ -256,21 +256,21 @@
                 <p>全てJavaScriptで処理されているため、サーバーにデータは保存されません。</p>
                 <p>クライアントサイドでブラウザに付属したデータベースを利用することが可能で、<br>その場合は再アクセス後自動的にデータを読み込みます。そのデータの管理はData Managerから行ってください。</p>
                 <p>ページを更新するとファイル選択画面に戻ります。ファイルを間違えた場合はページを更新してください。</p>
-                <p>Chromeのみで動作確認しています。不具合、要望等ありましたらお気軽にご連絡ください。</p>     
+                <p>Chromeのみで動作確認しています。不具合、要望等ありましたらお気軽にご連絡ください。</p>
                 <p>ソースコード:<a target="_blank" href="https://github.com/onekodate/mastodon">Github</a>　
                     開発者:<a target="_blank" href="https://mstdn.beer/web/accounts/80060">@onekodate@mstdn.beer</a></p>
                 <p>参考文献<br>
                     <a target="_blank" href="https://github.com/yuzulabo/Mastodon-Archive-Viewer">nzwsさんによるMastodon-Archive-Viewer</a><br>
                     <a target="_blank" href="https://github.com/takahashim/mastodon-access-token">takahashimさんによるAccess Token Generator for Mastodon API</a><br>
                     <a target="_blank" href="https://github.com/Kirschn/mastodon.js">Kirschnさんによるmastodon.js</a>
-                </p>                    
+                </p>
             </div>
         </div>
         <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
-        <script src="mastodon-api.js"></script>
+        <!-- <script src="mastodon-api.js"></script> -->
         <script src="mastodon.js"></script>
     </body>
 </html>
-                                             
+
